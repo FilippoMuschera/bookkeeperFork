@@ -691,6 +691,7 @@
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-all</artifactId>
@@ -707,7 +708,7 @@
         <version>${awaitility.version}</version>
         <scope>test</scope>
       </dependency>
-      <dependency>
+     <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
@@ -804,7 +805,7 @@
         <artifactId>rxjava</artifactId>
         <version>${rxjava.version}</version>
       </dependency>
-  
+
       <dependency>
         <groupId>com.carrotsearch</groupId>
         <artifactId>hppc</artifactId>
@@ -942,6 +943,11 @@
           <trimStackTrace>false</trimStackTrace>
           <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
           <rerunFailingTestsCount>${testRetryCount}</rerunFailingTestsCount>
+<!--          Commentando questa argline QUI si ottiene il report con jacoco, altrimenti si ottiene quello di ba-dua-->
+<!--          <argLine>-->
+<!--            -javaagent:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.4.0-all.jar-->
+<!--            -Xbootclasspath/p:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.4.0-all.jar-->
+<!--          </argLine>-->
         </configuration>
       </plugin>
       <plugin>
