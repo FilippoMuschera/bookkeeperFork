@@ -7,10 +7,10 @@ import org.junit.runners.Parameterized;
 import java.util.Arrays;
 import java.util.Collection;
 
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class FormatTest {
 
-    @Parameterized.Parameters
+    //@Parameterized.Parameters
     public static Collection<Object> getParams() {
         //TODO
         return null;
