@@ -1341,5 +1341,29 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>badua-report</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven-surefire-plugin.version}</version>
+            <configuration>
+              <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
+              <forkCount>${forkCount.variable}</forkCount>
+              <reuseForks>false</reuseForks>
+              <trimStackTrace>false</trimStackTrace>
+              <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
+              <rerunFailingTestsCount>${testRetryCount}</rerunFailingTestsCount>
+                        <argLine>
+                          -javaagent:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.4.0-all.jar
+                          -Xbootclasspath/p:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.4.0-all.jar
+                        </argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
