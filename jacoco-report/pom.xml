@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -48,11 +48,6 @@
             <version>4.16.0-SNAPSHOT</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.bookkeeper.stats</groupId>
-            <artifactId>bookkeeper-stats-parent</artifactId>
-            <version>4.16.0-SNAPSHOT</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.bookkeeper</groupId>
@@ -60,11 +55,6 @@
             <version>4.16.0-SNAPSHOT</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.bookkeeper</groupId>
-            <artifactId>bookkeeper-server</artifactId>
-            <version>4.16.0-SNAPSHOT</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.bookkeeper</groupId>
@@ -72,17 +62,6 @@
             <version>4.16.0-SNAPSHOT</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.bookkeeper.http</groupId>
-            <artifactId>bookkeeper-http</artifactId>
-            <version>4.16.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.bookkeeper</groupId>
-            <artifactId>stream-storage-parent</artifactId>
-            <version>4.16.0-SNAPSHOT</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.bookkeeper</groupId>
@@ -96,17 +75,6 @@
             <version>4.16.0-SNAPSHOT</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.bookkeeper</groupId>
-            <artifactId>bookkeeper-dist</artifactId>
-            <version>4.16.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.bookkeeper</groupId>
-            <artifactId>shaded-parent</artifactId>
-            <version>4.16.0-SNAPSHOT</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.bookkeeper</groupId>
@@ -114,11 +82,6 @@
             <version>4.16.0-SNAPSHOT</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.bookkeeper</groupId>
-            <artifactId>bookkeeper-slogger-parent</artifactId>
-            <version>4.16.0-SNAPSHOT</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.bookkeeper</groupId>
