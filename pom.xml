@@ -212,12 +212,13 @@
     <rxjava.version>3.0.1</rxjava.version>
     <maven-failsafe-plugin.version>3.0.0-M6</maven-failsafe-plugin.version>
     <awaitility.version>4.0.3</awaitility.version>
-    <argLine>-Xmx2G -Djwava.net.preferIPv4Stack=true -Dio.netty.leakDetection.level=paranoid ${test.additional.args}</argLine>
     <sonar.organization>filippomuschera-1</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.coverage.jacoco.xmlReportPaths>
       ../jacoco-report/target/site/jacoco-aggregate/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
+    <argLine>-Xmx2G -Djwava.net.preferIPv4Stack=true -Dio.netty.leakDetection.level=paranoid ${test.additional.args}</argLine>
+
 
   </properties>
 
@@ -948,11 +949,6 @@
           <trimStackTrace>false</trimStackTrace>
           <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
           <rerunFailingTestsCount>${testRetryCount}</rerunFailingTestsCount>
-<!--          Commentando questa argline QUI si ottiene il report con jacoco, altrimenti si ottiene quello di ba-dua-->
-<!--          <argLine>-->
-<!--            -javaagent:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.4.0-all.jar-->
-<!--            -Xbootclasspath/p:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.4.0-all.jar-->
-<!--          </argLine>-->
         </configuration>
       </plugin>
       <plugin>
@@ -1112,19 +1108,7 @@
         <version>${exec-maven-plugin.version}</version>
       </plugin>
 
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.8</version>
-        <executions>
-          <execution>
-            <id>jacoco-prepare-agent</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+
     </plugins>
   </build>
   <profiles>
@@ -1354,6 +1338,37 @@
                           -Xbootclasspath/p:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.4.0-all.jar
                         </argLine>
             </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <!--      Profilo per la creazione del report di jacoco-->
+      <id>jacoco-profile</id>
+      <properties>
+        <argLine>-Xmx2G -Djwava.net.preferIPv4Stack=true -Dio.netty.leakDetection.level=paranoid ${test.additional.args}</argLine>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.8</version>
+            <executions>
+              <execution>
+                <id>jacoco-prepare-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>jacoco-site</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
