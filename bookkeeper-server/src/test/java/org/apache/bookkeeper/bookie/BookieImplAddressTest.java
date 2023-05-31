@@ -15,6 +15,7 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class BookieImplAddressTest {
 
+    private static int testIndex = 0;
 
     private BookieSocketAddress bookieSocketAddress = null;
     private ServerConfiguration anotherConf;
@@ -32,6 +33,7 @@ public class BookieImplAddressTest {
         anotherConf.setUseShortHostName(shortName);
         anotherConf.setAllowLoopback(loopback);
         this.expectedValue = expectedValue;
+        testIndex += 1;
 
     }
 
@@ -95,7 +97,7 @@ public class BookieImplAddressTest {
             System.out.println(e.toString());
 
         }
-        Assert.assertEquals(expectedValue, actualValue);
+        Assert.assertEquals("Test #" + testIndex + " failed (index starts from 1)" ,expectedValue, actualValue);
     }
 
     private enum ExpectedValue {
