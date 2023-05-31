@@ -1,23 +1,16 @@
 package org.apache.bookkeeper.bookie;
 
-import org.apache.bookkeeper.bookie.util.TestBKConfiguration;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.net.BookieSocketAddress;
-import org.apache.bookkeeper.net.DNS;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @RunWith(Parameterized.class)
 public class BookieImplAddressTest {
@@ -28,9 +21,9 @@ public class BookieImplAddressTest {
 
     private ExpectedValue expectedValue;
 
-    private final String HOST_NAME = "filippo-VirtualBox";
+    private final String HOST_NAME = InetAddress.getLocalHost().getHostName();
 
-    public BookieImplAddressTest(String address, int port, String interfaceName, boolean hostAsName, boolean shortName, boolean loopback, ExpectedValue expectedValue) {
+    public BookieImplAddressTest(String address, int port, String interfaceName, boolean hostAsName, boolean shortName, boolean loopback, ExpectedValue expectedValue) throws UnknownHostException {
         anotherConf = new ServerConfiguration();
         anotherConf.setAdvertisedAddress(address);
         anotherConf.setBookiePort(port);
@@ -66,22 +59,33 @@ public class BookieImplAddressTest {
 
     @Test
     public void getAddressTest() {
-        ExpectedValue actualValue = null;
+        ExpectedValue actualValue = ExpectedValue.PASSED;
 
         try {
             bookieSocketAddress = BookieImpl.getBookieAddress(anotherConf);
             Assert.assertEquals("La porta passata come parametro è diversa da quella effettiva del bookieSocketAddress", anotherConf.getBookiePort(), bookieSocketAddress.getPort());
-            if (anotherConf.getAdvertisedAddress() == null && bookieSocketAddress.getHostName().equals("127.0.1.1")) {
-                actualValue = ExpectedValue.PASSED;
-            } else if (anotherConf.getAdvertisedAddress().equals("") && bookieSocketAddress.getHostName().equals("filippo-VirtualBox")) {
-                actualValue = ExpectedValue.PASSED;
-
-            } else if (anotherConf.getAdvertisedAddress().equals(bookieSocketAddress.getHostName())) {
-                actualValue = ExpectedValue.PASSED;
-            } else if (bookieSocketAddress.getHostName().equals("127.0.1.1")) {
-                actualValue = ExpectedValue.PASSED;
+            if (anotherConf.getAdvertisedAddress() != null && anotherConf.getAdvertisedAddress().trim().length() > 0) {
+                Assert.assertEquals(anotherConf.getAdvertisedAddress(), bookieSocketAddress.getHostName());
             }
 
+            else if (anotherConf.getUseHostNameAsBookieID()) {
+                if (anotherConf.getUseShortHostName()) {
+                    Assert.assertEquals(InetAddress.getLocalHost().getCanonicalHostName().split("\\.", 2)[0], bookieSocketAddress.getHostName());
+                }
+                else {
+                    Assert.assertEquals(HOST_NAME, bookieSocketAddress.getHostName());
+                }
+            }
+            else {
+                if (anotherConf.getAdvertisedAddress() == null || anotherConf.getAdvertisedAddress().equals("")) {
+                    Assert.assertEquals(InetAddress.getLocalHost().getHostAddress(), bookieSocketAddress.getHostName());
+
+                }
+                else {
+                    Assert.assertEquals(anotherConf.getAdvertisedAddress(), bookieSocketAddress.getHostName());
+
+                }
+            }
 
         } catch (UnknownHostException e) {
             actualValue = ExpectedValue.UH_EXCEPTION;

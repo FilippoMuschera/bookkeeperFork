@@ -94,12 +94,10 @@ public class BookieImplMountLedgerTest {
         try {
             BookieImpl.mountLedgerStorageOffline(serverConfiguration, ledgerStorage);
         } catch (IllegalArgumentException e) {
-            e.printStackTrace();
             actualValue = ExpectedValue.ILLEGAL_ARGUMENT;
 
         } catch (IOException e) {
             System.err.println("IOException verificatasi durante l'esecuzione di mountLedgerTest()");
-            e.printStackTrace();
         }
 
         Assert.assertEquals(expectedValue, actualValue);
