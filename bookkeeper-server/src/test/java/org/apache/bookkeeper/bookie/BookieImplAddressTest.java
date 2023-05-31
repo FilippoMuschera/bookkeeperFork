@@ -25,7 +25,7 @@ public class BookieImplAddressTest {
 
     private ExpectedValue expectedValue;
 
-    private final String HOST_NAME = InetAddress.getLocalHost().getHostName();
+    private final String HOST_NAME = InetAddress.getLocalHost().getCanonicalHostName();
 
     public BookieImplAddressTest(String address, int port, InterfaceType interfaceType, boolean hostAsName, boolean shortName, boolean loopback, ExpectedValue expectedValue) throws UnknownHostException, SocketException {
         anotherConf = new ServerConfiguration();
