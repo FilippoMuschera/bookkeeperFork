@@ -213,6 +213,11 @@
     <maven-failsafe-plugin.version>3.0.0-M6</maven-failsafe-plugin.version>
     <awaitility.version>4.0.3</awaitility.version>
     <argLine>-Xmx2G -Djwava.net.preferIPv4Stack=true -Dio.netty.leakDetection.level=paranoid ${test.additional.args}</argLine>
+    <sonar.organization>filippomuschera-1</sonar.organization>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    <sonar.coverage.jacoco.xmlReportPaths>
+      ${project.basedir}/jacoco-report/target/site/jacoco-aggregate/jacoco.xml
+    </sonar.coverage.jacoco.xmlReportPaths>
 
   </properties>
 
@@ -1118,19 +1123,6 @@
               <goal>prepare-agent</goal>
             </goals>
           </execution>
-          <execution>
-            <id>jacoco-report</id>
-            <goals>
-              <goal>report</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>jacoco-site</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>report-aggregate</goal>
-            </goals>
-          </execution>
         </executions>
       </plugin>
     </plugins>
@@ -1342,6 +1334,7 @@
       </build>
     </profile>
     <profile>
+<!--      Profilo per la creazione del report di ba-dua-->
       <id>badua-report</id>
       <build>
         <plugins>
