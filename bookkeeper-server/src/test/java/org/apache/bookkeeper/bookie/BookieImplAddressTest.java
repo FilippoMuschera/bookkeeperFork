@@ -1,5 +1,6 @@
 package org.apache.bookkeeper.bookie;
 
+import org.apache.bookkeeper.bookie.util.TestAddressUtil;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.net.DNS;
@@ -13,7 +14,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 
+import static org.apache.bookkeeper.bookie.util.TestAddressUtil.getInterfaceName;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.apache.bookkeeper.bookie.util.TestAddressUtil.ExpectedValue;
+import static org.apache.bookkeeper.bookie.util.TestAddressUtil.InterfaceType;
 
 @RunWith(Parameterized.class)
 public class BookieImplAddressTest {
@@ -23,11 +27,11 @@ public class BookieImplAddressTest {
     private BookieSocketAddress bookieSocketAddress = null;
     private ServerConfiguration anotherConf;
 
-    private ExpectedValue expectedValue;
+    private TestAddressUtil.ExpectedValue expectedValue;
 
     private final String HOST_NAME = InetAddress.getLocalHost().getCanonicalHostName();
 
-    public BookieImplAddressTest(String address, int port, InterfaceType interfaceType, boolean hostAsName, boolean shortName, boolean loopback, ExpectedValue expectedValue) throws UnknownHostException, SocketException {
+    public BookieImplAddressTest(String address, int port, TestAddressUtil.InterfaceType interfaceType, boolean hostAsName, boolean shortName, boolean loopback, TestAddressUtil.ExpectedValue expectedValue) throws UnknownHostException, SocketException {
         anotherConf = new ServerConfiguration();
         anotherConf.setAdvertisedAddress(address);
         anotherConf.setBookiePort(port);
@@ -40,48 +44,14 @@ public class BookieImplAddressTest {
 
     }
 
-    private String getInterfaceName(InterfaceType interfaceType) throws SocketException, UnknownHostException {
-
-        boolean exceptionThrown = false;
-        try {
-            switch (interfaceType) {
-                case NULL:
-                    return null;
-                case EMPTY:
-                    return "";
-                case INVALID:
-                    return "notAnInterface";
-                case VALID:
-                    Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-                    String address = InetAddress.getLocalHost().getHostAddress();
-                    while (interfaces.hasMoreElements()) {
-                        NetworkInterface iface = interfaces.nextElement();
-                        String host = DNS.getDefaultHost(iface.getName());
-                        String ip = new InetSocketAddress(host, 0).getAddress().getHostAddress();
-
-                        if (address.equals(ip))
-                            return iface.getName();
-                    }
-                    throw new RuntimeException("errore nel reperire la corretta interfaccia di rete");
-
-            }
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            exceptionThrown = true;
-        }
-        assertFalse(exceptionThrown);
-        return null;
-    }
 
     @Parameterized.Parameters
     public static Collection<Object[]> getParams() {
         return Arrays.asList(new Object[][] {
                 //address    //port    //interface              //hostNameAsBookie    //shortName    //allowLoopBack    //expectedValue
                 {"",           1,     InterfaceType.NULL,           false,                false,         true,            ExpectedValue.PASSED},
-               // {"",           1,     InterfaceType.INVALID,        false,                false,         true,            ExpectedValue.UH_EXCEPTION},
                 {"",           0,     InterfaceType.VALID,          true,                 true,          true,            ExpectedValue.PASSED},
-              //  {"",           0,     InterfaceType.VALID,          true,                 false,         false,           ExpectedValue.UH_EXCEPTION},
-             //   {"",           1,     InterfaceType.EMPTY,          false,                false,         true,            ExpectedValue.UH_EXCEPTION},
+                {"",           1,     InterfaceType.EMPTY,          false,                false,         true,            ExpectedValue.UH_EXCEPTION},
          {"0.0.0.0",           1,     InterfaceType.VALID,          false,                false,         true,            ExpectedValue.PASSED },
          {"0.0.0.0",           1,     InterfaceType.VALID,          false,                false,         false,           ExpectedValue.PASSED },
          {"192.168.56.102",    1,     InterfaceType.VALID,          false,                false,         true,            ExpectedValue.PASSED },
@@ -89,7 +59,7 @@ public class BookieImplAddressTest {
                 {null,         1,     InterfaceType.VALID,          false,                false,         true,            ExpectedValue.PASSED},
                 {"",           -1,    InterfaceType.VALID,          true,                 false,         true,            ExpectedValue.IA_EXCEPTION},
                 {"",         65536,   InterfaceType.VALID,          true,                 false,         true,            ExpectedValue.IA_EXCEPTION},
-         {"30000.598.1.2",      1,      InterfaceType.VALID,          false,                false,         true,            ExpectedValue.PASSED},
+         {"30000.598.1.2",      1,    InterfaceType.VALID,          false,                false,         true,            ExpectedValue.PASSED},
 
 
         });
@@ -136,12 +106,6 @@ public class BookieImplAddressTest {
         Assert.assertEquals("Test #" + testIndex + " failed (index starts from 1)" ,expectedValue, actualValue);
     }
 
-    private enum ExpectedValue {
-        PASSED, UH_EXCEPTION, IA_EXCEPTION
-    }
 
-    private enum InterfaceType {
-        NULL, VALID, INVALID, EMPTY
-    }
 
 }
