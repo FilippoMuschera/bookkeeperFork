@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.powermock.api.mockito.PowerMockito.spy;
 
-@PrepareForTest({DNS.class})
+@PrepareForTest({DNS.class, BookieImpl.class})
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore("javax.management.*")
 public class BookieImplAddressMockTest {
@@ -74,7 +74,10 @@ public class BookieImplAddressMockTest {
 
         BookieSocketAddress myBookie = new CustomBookieSocketAddress(InetAddress.getLocalHost().getCanonicalHostName(), 0);
         PowerMockito.whenNew(BookieSocketAddress.class).withAnyArguments().thenReturn(myBookie);
+        BookieSocketAddress anotherOne = new BookieSocketAddress("filippoVirtualbox", 2020);
+        System.out.println(anotherOne.getSocketAddress().getAddress().getHostAddress());
 
+        //controlla che sto coso fa quello che deve
 
         ServerConfiguration conf = TestBKConfiguration.newServerConfiguration();
         conf.setAdvertisedAddress("");
