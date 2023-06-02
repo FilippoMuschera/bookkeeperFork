@@ -1,14 +1,33 @@
 package org.apache.bookkeeper.bookie;
 
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.apache.bookkeeper.conf.ServerConfiguration;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
-import java.util.Arrays;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 //@RunWith(Parameterized.class)
 public class FormatTest {
+
+    private static int FOLDER_COUNT = 0;
+    private static final int NUM_OF_FOLDERS = 4;
+    private static final List<File> folderList = new ArrayList<>();
+    private static final List<File> journalList = new ArrayList<>();
+    private static final List<File> ledgerList = new ArrayList<>();
+    private static final List<File> indexList = new ArrayList<>();
+
+    private static final String JOURNAL = "journal";
+    private static final String LEDGER = "ledger";
+    private static final String INDEX = "index";
+    private static final String METADATA_PATH = "metadata-dir";
 
     //@Parameterized.Parameters
     public static Collection<Object> getParams() {
@@ -16,7 +35,98 @@ public class FormatTest {
         return null;
     }
 
+    @BeforeClass
+    public static void createDirs() {
+        for (int i = 0; i < NUM_OF_FOLDERS; i++) {
+            newTempDir(JOURNAL);
+            newTempDir(LEDGER);
+            newTempDir(INDEX);
 
+        }
+        newTempDir(METADATA_PATH);
+        fillFolders();
+    }
+
+    private static void fillFolders() {
+        for (File directory : folderList) {
+            try {
+                File tempFile1 = File.createTempFile("tempFile1", ".tmp", directory);
+                File tempFile2 = File.createTempFile("tempFile2", ".tmp", directory);
+                File tempFile3 = File.createTempFile("tempFile3", ".tmp", directory);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+    }
+
+    @AfterClass
+    public static void deleteDirs() {
+        for (File dir : folderList) {
+            deleteFolder(dir);
+        }
+    }
+
+    private static void newTempDir(String category) {
+        String folderName = "temp-folder-" + category + FOLDER_COUNT;
+        File directory = new File(folderName);
+        assertTrue(directory.mkdir());
+        FOLDER_COUNT++;
+        folderList.add(directory);
+        addToCategoryList(directory, category);
+    }
+
+    private static void addToCategoryList(File directory, String category) {
+        switch (category) {
+            case JOURNAL:
+                journalList.add(directory);
+                break;
+
+            case LEDGER:
+                ledgerList.add(directory);
+                break;
+
+            case INDEX:
+                indexList.add(directory);
+                break;
+
+            case METADATA_PATH:
+                break;
+        }
+    }
+
+    private static void deleteFolder(File folder) {
+        if (folder.isDirectory()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    deleteFolder(file);
+                }
+            }
+        }
+        assertTrue(folder.delete());
+    }
+
+
+    @Test
+    public void formatTest() {
+        ServerConfiguration configuration = new ServerConfiguration();
+        configuration.setJournalDirsName(this.extractFileNames(journalList));
+        configuration.setLedgerDirNames(this.extractFileNames(ledgerList));
+        configuration.setIndexDirName(this.extractFileNames(indexList));
+        configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
+        BookieImpl.format(configuration, false, true);
+    }
+
+    private String[] extractFileNames(List<File> fileList) {
+        String[] stringNames = new String[fileList.size()];
+        int i = 0;
+        for (File file : fileList) {
+            stringNames[i] = file.getName();
+            i++;
+        }
+        return stringNames;
+    }
 
 
 }
