@@ -5,22 +5,19 @@ import org.apache.bookkeeper.bookie.util.TestBookieImplUtil;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.*;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.*;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RunWith(Parameterized.class)
 public class FormatTest {
@@ -115,9 +112,7 @@ public class FormatTest {
     }
 
 
-    private enum FileDir {
-        VALID, INVALID
-    }
+
 
 
 }
