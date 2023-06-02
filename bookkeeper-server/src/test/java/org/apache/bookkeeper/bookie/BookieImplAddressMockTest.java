@@ -2,24 +2,30 @@ package org.apache.bookkeeper.bookie;
 
 import org.apache.bookkeeper.bookie.util.TestAddressUtil;
 import org.apache.bookkeeper.bookie.util.TestBKConfiguration;
+import org.apache.bookkeeper.bookie.util.testtypes.CustomBookieSocketAddress;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.net.DNS;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.net.*;
+import java.lang.reflect.Method;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.UnknownHostException;
 
 import static org.apache.bookkeeper.bookie.util.TestAddressUtil.getInterfaceName;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.powermock.api.mockito.PowerMockito.*;
+import static org.powermock.api.mockito.PowerMockito.spy;
 
-@PrepareForTest({DNS.class, Inet4Address.class})
+@PrepareForTest({DNS.class})
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore("javax.management.*")
 public class BookieImplAddressMockTest {
@@ -38,8 +44,8 @@ public class BookieImplAddressMockTest {
     @Test
     public void testUnknownInterface() throws Exception {
 
-        spy(DNS.class);
-        PowerMockito.when(DNS.class, "getSubinterface", "notAnInterface").thenReturn(null);
+        PowerMockito.spy(DNS.class);
+        PowerMockito.when(DNS.class, "getSubinterface", "notAnInterface").thenAnswer((Answer<NetworkInterface>) invocation -> null);
 
         ServerConfiguration conf = TestBKConfiguration.newServerConfiguration();
         conf.setAdvertisedAddress("");
@@ -63,12 +69,12 @@ public class BookieImplAddressMockTest {
     }
 
     @Test
-    public void testLoopBackException() throws SocketException, UnknownHostException {
+    public void testLoopBackException() throws Exception {
 
-        InetSocketAddress inetSocketAddress = new InetSocketAddress(InetAddress.getLocalHost().getHostName(), 0);
-        InetAddress socketAddress = inetSocketAddress.getAddress();
-        InetAddress mockedAddress = mock(socketAddress.getClass());
-        when(mockedAddress.isLoopbackAddress()).thenReturn(true);
+
+        BookieSocketAddress myBookie = new CustomBookieSocketAddress(InetAddress.getLocalHost().getCanonicalHostName(), 0);
+        PowerMockito.whenNew(BookieSocketAddress.class).withAnyArguments().thenReturn(myBookie);
+
 
         ServerConfiguration conf = TestBKConfiguration.newServerConfiguration();
         conf.setAdvertisedAddress("");
@@ -85,12 +91,15 @@ public class BookieImplAddressMockTest {
         } catch (UnknownHostException e) {
             exceptionThrown = true;
 
-           assertEquals(LB_MSG, e.getMessage());
+            assertEquals(LB_MSG, e.getMessage());
         }
 
         assertTrue(exceptionThrown);
 
     }
+
+
+
 
 
 
