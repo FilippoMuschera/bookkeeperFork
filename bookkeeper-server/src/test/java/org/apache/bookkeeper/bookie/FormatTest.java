@@ -2,9 +2,11 @@ package org.apache.bookkeeper.bookie;
 
 
 import org.apache.bookkeeper.conf.ServerConfiguration;
+import org.apache.bookkeeper.util.IOUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.MockedConstruction;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,21 +15,24 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.when;
 
 //@RunWith(Parameterized.class)
 public class FormatTest {
 
     private static int FOLDER_COUNT = 0;
     private static final int NUM_OF_FOLDERS = 4;
-    private static final List<File> folderList = new ArrayList<>();
-    private static final List<File> journalList = new ArrayList<>();
-    private static final List<File> ledgerList = new ArrayList<>();
-    private static final List<File> indexList = new ArrayList<>();
+    public static final List<File> folderList = new ArrayList<>();
+    public static final List<File> journalList = new ArrayList<>();
+    public static final List<File> ledgerList = new ArrayList<>();
+    public static final List<File> indexList = new ArrayList<>();
 
     private static final String JOURNAL = "journal";
     private static final String LEDGER = "ledger";
     private static final String INDEX = "index";
-    private static final String METADATA_PATH = "metadata-dir";
+    public static final String METADATA_PATH = "metadata-dir";
 
     //@Parameterized.Parameters
     public static Collection<Object> getParams() {
@@ -37,6 +42,7 @@ public class FormatTest {
 
     @BeforeClass
     public static void createDirs() {
+        cleanAll(); //Nel caso questo test venisse eseguito dopo quello con i mock
         for (int i = 0; i < NUM_OF_FOLDERS; i++) {
             newTempDir(JOURNAL);
             newTempDir(LEDGER);
@@ -46,6 +52,8 @@ public class FormatTest {
         newTempDir(METADATA_PATH);
         fillFolders();
     }
+
+
 
     private static void fillFolders() {
         for (File directory : folderList) {
@@ -60,11 +68,18 @@ public class FormatTest {
         }
     }
 
-    @AfterClass
+
+@AfterClass
+public static void after() {
+        cleanAll();
+}
+
+
     public static void deleteDirs() {
         for (File dir : folderList) {
             deleteFolder(dir);
         }
+
     }
 
     private static void newTempDir(String category) {
@@ -107,18 +122,27 @@ public class FormatTest {
         assertTrue(folder.delete());
     }
 
+    public static void cleanAll() {
+        deleteDirs();
+        folderList.clear();
+        journalList.clear();
+        ledgerList.clear();
+        indexList.clear();
+        FOLDER_COUNT = 0;
+    }
+
 
     @Test
     public void formatTest() {
         ServerConfiguration configuration = new ServerConfiguration();
-        configuration.setJournalDirsName(this.extractFileNames(journalList));
-        configuration.setLedgerDirNames(this.extractFileNames(ledgerList));
-        configuration.setIndexDirName(this.extractFileNames(indexList));
+        configuration.setJournalDirsName(extractFileNames(journalList));
+        configuration.setLedgerDirNames(extractFileNames(ledgerList));
+        configuration.setIndexDirName(extractFileNames(indexList));
         configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
         BookieImpl.format(configuration, false, true);
     }
 
-    private String[] extractFileNames(List<File> fileList) {
+    public static String[] extractFileNames(List<File> fileList) {
         String[] stringNames = new String[fileList.size()];
         int i = 0;
         for (File file : fileList) {
