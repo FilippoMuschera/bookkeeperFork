@@ -74,10 +74,6 @@ public class BookieImplAddressMockTest {
 
         BookieSocketAddress myBookie = new CustomBookieSocketAddress(InetAddress.getLocalHost().getCanonicalHostName(), 0);
         PowerMockito.whenNew(BookieSocketAddress.class).withAnyArguments().thenReturn(myBookie);
-        BookieSocketAddress anotherOne = new BookieSocketAddress("filippoVirtualbox", 2020);
-        System.out.println(anotherOne.getSocketAddress().getAddress().getHostAddress());
-
-        //controlla che sto coso fa quello che deve
 
         ServerConfiguration conf = TestBKConfiguration.newServerConfiguration();
         conf.setAdvertisedAddress("");
@@ -102,7 +98,15 @@ public class BookieImplAddressMockTest {
     }
 
 
+ /*
+ MOTIVO PER CUI IL BRANCH DEL LOOBACK RISULTERÀ COMUNQUE GIALLO IN JACOCO (Dalle FAQ di Jacoco https://www.jacoco.org/jacoco/trunk/doc/faq.html)
 
+ Source code lines with exceptions show no coverage. Why?
+JaCoCo determines code execution with so called probes.
+Probes are inserted into the control flow at certain positions.
+Code is considered as executed when a subsequent probe has been executed. In case of exceptions such a sequence of i
+nstructions is aborted somewhere in the middle and the corresponding lines of source code are not marked as covered.
+  */
 
 
 

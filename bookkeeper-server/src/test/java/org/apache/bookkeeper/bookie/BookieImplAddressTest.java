@@ -3,7 +3,6 @@ package org.apache.bookkeeper.bookie;
 import org.apache.bookkeeper.bookie.util.TestAddressUtil;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.net.BookieSocketAddress;
-import org.apache.bookkeeper.net.DNS;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,7 +11,6 @@ import org.junit.runners.Parameterized;
 import java.net.*;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Enumeration;
 
 import static org.apache.bookkeeper.bookie.util.TestAddressUtil.getInterfaceName;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -25,20 +23,20 @@ public class BookieImplAddressTest {
     private static int testIndex = 0;
 
     private BookieSocketAddress bookieSocketAddress = null;
-    private ServerConfiguration anotherConf;
+    private ServerConfiguration config;
 
     private TestAddressUtil.ExpectedValue expectedValue;
 
     private final String HOST_NAME = InetAddress.getLocalHost().getCanonicalHostName();
 
     public BookieImplAddressTest(String address, int port, TestAddressUtil.InterfaceType interfaceType, boolean hostAsName, boolean shortName, boolean loopback, TestAddressUtil.ExpectedValue expectedValue) throws UnknownHostException, SocketException {
-        anotherConf = new ServerConfiguration();
-        anotherConf.setAdvertisedAddress(address);
-        anotherConf.setBookiePort(port);
-        anotherConf.setListeningInterface(getInterfaceName(interfaceType));
-        anotherConf.setUseHostNameAsBookieID(hostAsName);
-        anotherConf.setUseShortHostName(shortName);
-        anotherConf.setAllowLoopback(loopback);
+        config = new ServerConfiguration();
+        config.setAdvertisedAddress(address);
+        config.setBookiePort(port);
+        config.setListeningInterface(getInterfaceName(interfaceType));
+        config.setUseHostNameAsBookieID(hostAsName);
+        config.setUseShortHostName(shortName);
+        config.setAllowLoopback(loopback);
         this.expectedValue = expectedValue;
         testIndex += 1;
 
@@ -49,7 +47,7 @@ public class BookieImplAddressTest {
     public static Collection<Object[]> getParams() {
         return Arrays.asList(new Object[][] {
                 //address    //port    //interface              //hostNameAsBookie    //shortName    //allowLoopBack    //expectedValue
-                {"",           1,     InterfaceType.NULL,           false,                false,         true,            ExpectedValue.PASSED},
+                {"",           1,     InterfaceType.NULL,           true,                 false,         true,            ExpectedValue.PASSED},
                 {"",           0,     InterfaceType.VALID,          true,                 true,          true,            ExpectedValue.PASSED},
                 {"",           1,     InterfaceType.EMPTY,          false,                false,         true,            ExpectedValue.UH_EXCEPTION},
          {"0.0.0.0",           1,     InterfaceType.VALID,          false,                false,         true,            ExpectedValue.PASSED },
@@ -70,14 +68,14 @@ public class BookieImplAddressTest {
         ExpectedValue actualValue = ExpectedValue.PASSED;
 
         try {
-            bookieSocketAddress = BookieImpl.getBookieAddress(anotherConf);
-            Assert.assertEquals("La porta passata come parametro è diversa da quella effettiva del bookieSocketAddress", anotherConf.getBookiePort(), bookieSocketAddress.getPort());
-            if (anotherConf.getAdvertisedAddress() != null && anotherConf.getAdvertisedAddress().trim().length() > 0) {
-                Assert.assertEquals(anotherConf.getAdvertisedAddress(), bookieSocketAddress.getHostName());
+            bookieSocketAddress = BookieImpl.getBookieAddress(config);
+            Assert.assertEquals("La porta passata come parametro è diversa da quella effettiva del bookieSocketAddress", config.getBookiePort(), bookieSocketAddress.getPort());
+            if (config.getAdvertisedAddress() != null && config.getAdvertisedAddress().trim().length() > 0) {
+                Assert.assertEquals(config.getAdvertisedAddress(), bookieSocketAddress.getHostName());
             }
 
-            else if (anotherConf.getUseHostNameAsBookieID()) {
-                if (anotherConf.getUseShortHostName()) {
+            else if (config.getUseHostNameAsBookieID()) {
+                if (config.getUseShortHostName()) {
                     Assert.assertEquals(InetAddress.getLocalHost().getCanonicalHostName().split("\\.", 2)[0], bookieSocketAddress.getHostName());
                 }
                 else {
@@ -85,12 +83,12 @@ public class BookieImplAddressTest {
                 }
             }
             else {
-                if (anotherConf.getAdvertisedAddress() == null || anotherConf.getAdvertisedAddress().equals("")) {
+                if (config.getAdvertisedAddress() == null || config.getAdvertisedAddress().equals("")) {
                     Assert.assertEquals(InetAddress.getLocalHost().getHostAddress(), bookieSocketAddress.getHostName());
 
                 }
                 else {
-                    Assert.assertEquals(anotherConf.getAdvertisedAddress(), bookieSocketAddress.getHostName());
+                    Assert.assertEquals(config.getAdvertisedAddress(), bookieSocketAddress.getHostName());
 
                 }
             }
