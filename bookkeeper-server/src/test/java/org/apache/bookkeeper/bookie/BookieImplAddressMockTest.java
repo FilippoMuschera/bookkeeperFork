@@ -1,6 +1,6 @@
 package org.apache.bookkeeper.bookie;
 
-import org.apache.bookkeeper.bookie.util.TestAddressUtil;
+import org.apache.bookkeeper.bookie.util.TestBookieImplUtil;
 import org.apache.bookkeeper.bookie.util.TestBKConfiguration;
 import org.apache.bookkeeper.bookie.util.testtypes.CustomBookieSocketAddress;
 import org.apache.bookkeeper.conf.ServerConfiguration;
@@ -14,13 +14,11 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.lang.reflect.Method;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 
-import static org.apache.bookkeeper.bookie.util.TestAddressUtil.getInterfaceName;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.getInterfaceName;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.powermock.api.mockito.PowerMockito.spy;
@@ -77,7 +75,7 @@ public class BookieImplAddressMockTest {
 
         ServerConfiguration conf = TestBKConfiguration.newServerConfiguration();
         conf.setAdvertisedAddress("");
-        conf.setListeningInterface(getInterfaceName(TestAddressUtil.InterfaceType.VALID));
+        conf.setListeningInterface(getInterfaceName(TestBookieImplUtil.DataType.VALID));
         conf.setBookiePort(0);
         conf.setUseHostNameAsBookieID(true);
         conf.setUseShortHostName(false);

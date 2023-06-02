@@ -1,6 +1,6 @@
 package org.apache.bookkeeper.bookie;
 
-import org.apache.bookkeeper.bookie.util.TestAddressUtil;
+import org.apache.bookkeeper.bookie.util.TestBookieImplUtil;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.junit.Assert;
@@ -12,10 +12,10 @@ import java.net.*;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.apache.bookkeeper.bookie.util.TestAddressUtil.getInterfaceName;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.getInterfaceName;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.apache.bookkeeper.bookie.util.TestAddressUtil.ExpectedValue;
-import static org.apache.bookkeeper.bookie.util.TestAddressUtil.InterfaceType;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType;
 
 @RunWith(Parameterized.class)
 public class BookieImplAddressTest {
@@ -25,15 +25,15 @@ public class BookieImplAddressTest {
     private BookieSocketAddress bookieSocketAddress = null;
     private ServerConfiguration config;
 
-    private TestAddressUtil.ExpectedValue expectedValue;
+    private TestBookieImplUtil.ExpectedValue expectedValue;
 
     private final String HOST_NAME = InetAddress.getLocalHost().getCanonicalHostName();
 
-    public BookieImplAddressTest(String address, int port, TestAddressUtil.InterfaceType interfaceType, boolean hostAsName, boolean shortName, boolean loopback, TestAddressUtil.ExpectedValue expectedValue) throws UnknownHostException, SocketException {
+    public BookieImplAddressTest(String address, int port, DataType dataType, boolean hostAsName, boolean shortName, boolean loopback, TestBookieImplUtil.ExpectedValue expectedValue) throws UnknownHostException, SocketException {
         config = new ServerConfiguration();
         config.setAdvertisedAddress(address);
         config.setBookiePort(port);
-        config.setListeningInterface(getInterfaceName(interfaceType));
+        config.setListeningInterface(getInterfaceName(dataType));
         config.setUseHostNameAsBookieID(hostAsName);
         config.setUseShortHostName(shortName);
         config.setAllowLoopback(loopback);
@@ -47,17 +47,17 @@ public class BookieImplAddressTest {
     public static Collection<Object[]> getParams() {
         return Arrays.asList(new Object[][] {
                 //address    //port    //interface              //hostNameAsBookie    //shortName    //allowLoopBack    //expectedValue
-                {"",           1,     InterfaceType.NULL,           true,                 false,         true,            ExpectedValue.PASSED},
-                {"",           0,     InterfaceType.VALID,          true,                 true,          true,            ExpectedValue.PASSED},
-                {"",           1,     InterfaceType.EMPTY,          false,                false,         true,            ExpectedValue.UH_EXCEPTION},
-         {"0.0.0.0",           1,     InterfaceType.VALID,          false,                false,         true,            ExpectedValue.PASSED },
-         {"0.0.0.0",           1,     InterfaceType.VALID,          false,                false,         false,           ExpectedValue.PASSED },
-         {"192.168.56.102",    1,     InterfaceType.VALID,          false,                false,         true,            ExpectedValue.PASSED },
-         {"192.168.56.102",    1,     InterfaceType.VALID,          true,                 true,          false,           ExpectedValue.PASSED},
-                {null,         1,     InterfaceType.VALID,          false,                false,         true,            ExpectedValue.PASSED},
-                {"",           -1,    InterfaceType.VALID,          true,                 false,         true,            ExpectedValue.IA_EXCEPTION},
-                {"",         65536,   InterfaceType.VALID,          true,                 false,         true,            ExpectedValue.IA_EXCEPTION},
-         {"30000.598.1.2",      1,    InterfaceType.VALID,          false,                false,         true,            ExpectedValue.PASSED},
+                {"",           1,     DataType.NULL,           true,                 false,         true,            ExpectedValue.PASSED},
+                {"",           0,     DataType.VALID,          true,                 true,          true,            ExpectedValue.PASSED},
+                {"",           1,     DataType.EMPTY,          false,                false,         true,            ExpectedValue.UH_EXCEPTION},
+         {"0.0.0.0",           1,     DataType.VALID,          false,                false,         true,            ExpectedValue.PASSED },
+         {"0.0.0.0",           1,     DataType.VALID,          false,                false,         false,           ExpectedValue.PASSED },
+         {"192.168.56.102",    1,     DataType.VALID,          false,                false,         true,            ExpectedValue.PASSED },
+         {"192.168.56.102",    1,     DataType.VALID,          true,                 true,          false,           ExpectedValue.PASSED},
+                {null,         1,     DataType.VALID,          false,                false,         true,            ExpectedValue.PASSED},
+                {"",           -1,    DataType.VALID,          true,                 false,         true,            ExpectedValue.IA_EXCEPTION},
+                {"",         65536,   DataType.VALID,          true,                 false,         true,            ExpectedValue.IA_EXCEPTION},
+         {"30000.598.1.2",      1,    DataType.VALID,          false,                false,         true,            ExpectedValue.PASSED},
 
 
         });

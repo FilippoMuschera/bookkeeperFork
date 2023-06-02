@@ -13,6 +13,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.apache.bookkeeper.bookie.FormatTest.*;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -23,10 +24,10 @@ public class FormatMockTest {
 
 
     @Before
-    public void cleanBefore(){FormatTest.cleanAll();}
+    public void cleanBefore(){cleanAll();}
 
     @After
-    public void cleanAfter(){FormatTest.cleanAll();}
+    public void cleanAfter(){cleanAll();}
 
 
     @Test
@@ -35,8 +36,8 @@ public class FormatMockTest {
         PowerMockito.mockStatic(IOUtils.class);
         PowerMockito.when(IOUtils.confirmPrompt("Are you sure to format Bookie data..?")).thenAnswer((Answer<Boolean>) invocation -> true);
 
-        FormatTest.cleanAll();
-        FormatTest.createDirs();
+        cleanAll();
+        createDirs();
 
         ServerConfiguration configuration = new ServerConfiguration();
         configuration.setJournalDirsName(extractFileNames(journalList));
@@ -56,7 +57,8 @@ public class FormatMockTest {
         PowerMockito.mockStatic(IOUtils.class);
         PowerMockito.when(IOUtils.confirmPrompt("Are you sure to format Bookie data..?")).thenAnswer((Answer<Boolean>) invocation -> false);
 
-        FormatTest.createDirs();
+        cleanAll();
+        createDirs();
 
         ServerConfiguration configuration = new ServerConfiguration();
         configuration.setJournalDirsName(extractFileNames(journalList));
