@@ -1334,8 +1334,8 @@
               <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
               <rerunFailingTestsCount>${testRetryCount}</rerunFailingTestsCount>
                         <argLine>
-                          -javaagent:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.4.0-all.jar
-                          -Xbootclasspath/p:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.4.0-all.jar
+                          -javaagent:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.6.0-all.jar
+                          -Xbootclasspath/p:/home/filippo/Desktop/ISW2/Other/badua-jars/ba-dua-agent-rt-0.6.0-all.jar
                         </argLine>
             </configuration>
           </plugin>
