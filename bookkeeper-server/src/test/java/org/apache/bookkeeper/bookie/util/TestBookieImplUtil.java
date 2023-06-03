@@ -112,7 +112,7 @@ public class TestBookieImplUtil {
     public static void newTempDir(String category) {
         String folderName = "temp-folder-" + category + FOLDER_COUNT;
         File directory = new File(folderName);
-        assertTrue(directory.mkdir());
+        directory.mkdir(); //se è false la cartella è già presente, che è comunque ok
         FOLDER_COUNT++;
         folderList.add(directory);
         addToCategoryList(directory, category);

@@ -230,6 +230,13 @@
       <artifactId>awaitility</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.pitest/pitest-maven -->
+    <dependency>
+      <groupId>org.pitest</groupId>
+      <artifactId>pitest-maven</artifactId>
+      <version>1.4.2</version>
+    </dependency>
+
   </dependencies>
   <build>
     <plugins>
@@ -312,6 +319,20 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.4.2</version>
+        <configuration>
+          <verbose>false</verbose>
+          <targetClasses>
+            <param>org.apache.bookkeeper.bookie.BookieImpl</param>
+          </targetClasses>
+          <targetTests>
+            <param>org.apache.bookkeeper.bookie.*</param>
+          </targetTests>
+        </configuration>
       </plugin>
     </plugins>
   </build>
