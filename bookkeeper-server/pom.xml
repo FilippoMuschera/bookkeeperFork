@@ -326,6 +326,7 @@
         <version>1.4.2</version>
         <configuration>
           <verbose>false</verbose>
+          <threads>8</threads>
           <targetClasses>
             <param>org.apache.bookkeeper.bookie.BookieImpl</param>
           </targetClasses>

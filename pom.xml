@@ -1319,7 +1319,7 @@
     </profile>
     <profile>
 <!--      Profilo per la creazione del report di ba-dua-->
-      <id>badua-report</id>
+      <id>badua-profile</id>
       <build>
         <plugins>
           <plugin>

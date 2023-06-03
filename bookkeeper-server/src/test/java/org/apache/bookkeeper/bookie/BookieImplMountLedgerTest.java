@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @RunWith(Parameterized.class)
 public class BookieImplMountLedgerTest {
 
@@ -92,7 +94,12 @@ public class BookieImplMountLedgerTest {
         actualValue = ExpectedValue.PASSED;
 
         try {
-            BookieImpl.mountLedgerStorageOffline(serverConfiguration, ledgerStorage);
+            LedgerStorage ls = BookieImpl.mountLedgerStorageOffline(serverConfiguration, ledgerStorage);
+            //Dopo aver visto i risultati di PIT aggiungiamo ulteriori controlli
+            //sul valore di ritorno del metodo, per aumentare il numero di mutazioni KILLED
+            //e quindi la qualità del test stesso
+            assertEquals(0, ls.localConsistencyCheck(java.util.Optional.empty()).size());
+            ls.checkpoint(CheckpointSource.Checkpoint.MIN);
         } catch (IllegalArgumentException e) {
             actualValue = ExpectedValue.ILLEGAL_ARGUMENT;
 

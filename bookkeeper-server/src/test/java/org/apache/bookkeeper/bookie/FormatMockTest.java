@@ -12,10 +12,11 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.IOException;
+
 import static org.apache.bookkeeper.bookie.FormatTest.*;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @PrepareForTest({IOUtils.class, BookieImpl.class})
 @RunWith(PowerMockRunner.class)
@@ -67,6 +68,36 @@ public class FormatMockTest {
         configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
         boolean output = BookieImpl.format(configuration, true, false);
         assertFalse(output);
+
+
+    }
+
+    @Test
+    public void formatTestWithMockException() throws Exception {
+
+        /*
+         In questo test, come si vede dal mock, viene lanciata una IOException (la lanciamo da IOUtils perchè è un oggetto
+         di BookKeeper, anche se lo scenario in cui si potrebbe verificare realmente è quello in cui questa eccezione è
+         lanciata da System.in.read(), che però non essendo un tipo che "possediamo", evitiamo di mockare.
+         BookieImpl.format() provvede a fare il catch dell'eccezione e ritornare semplicemente false.
+         Come si vede infatti dalla segnatura di format(), non esegue il throws di nessuna eccezione.
+         */
+
+        PowerMockito.mockStatic(IOUtils.class);
+        PowerMockito.when(IOUtils.confirmPrompt("Are you sure to format Bookie data..?")).thenThrow(IOException.class);
+
+        cleanAll();
+        createDirs();
+
+        ServerConfiguration configuration = new ServerConfiguration();
+        configuration.setJournalDirsName(extractFileNames(journalList));
+        configuration.setLedgerDirNames(extractFileNames(ledgerList));
+        configuration.setIndexDirName(extractFileNames(indexList));
+        configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
+        boolean output = BookieImpl.format(configuration, true, false);
+        assertFalse(output);
+
+
 
 
     }
