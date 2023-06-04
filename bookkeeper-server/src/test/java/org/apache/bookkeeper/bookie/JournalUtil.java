@@ -58,7 +58,7 @@ public class JournalUtil {
         BookieImpl.checkDirectoryStructure(BookieImpl.getCurrentDirectory(ledgerDir));
 
         JournalChannel jc = writeV4Journal(BookieImpl.getCurrentDirectory(journalDir), NUM_OF_ENTRIES_ON_FIRST_JOURNAL, "test".getBytes());
-        JournalTest.writtenBytes = jc.fc.position();
+        JournalTest.WRITTEN_BYTES = jc.fc.position();
         writeV4Journal(BookieImpl.getCurrentDirectory(journalDir), NUM_OF_ENTRIES_ON_SECOND_JOURNAL, "test".getBytes());
 
 

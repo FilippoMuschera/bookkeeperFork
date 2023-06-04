@@ -3,30 +3,68 @@ package org.apache.bookkeeper.bookie;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
-import static org.apache.bookkeeper.bookie.ApacheBookieJournalUtil.*;
 import static org.apache.bookkeeper.bookie.JournalUtil.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
+@RunWith(Parameterized.class)
 public class JournalTest {
 
 
-    public static long writtenBytes;
+    public static long WRITTEN_BYTES;
+    private final long EMPTY_JOURNAL_BYTES = 516L;
     private Journal journal;
+    private int journalToUse;
+    private long journalPos;
+    private Journal.JournalScanner scanner;
+    private Expected expected;
+    private Exception actualException = null;
     private long journalID;
-    private long totalBytesToRead;
+
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> getParams() { //TODO CHECK EXPECET VALUES
+        return Arrays.asList(new Object[][]{
+             //journalToScan         //journalPos        //Scanner           //Expected
+                {0,                      -1,          new DummyJournalScan(),     Expected.EXACT_BYTES},
+                {0,                       0,          new DummyJournalScan(),     Expected.EXACT_BYTES},
+                {0,                       1,          new DummyJournalScan(),     Expected.PASSED},
+                {1,                      -1,          new DummyJournalScan(),     Expected.PASSED},
+                {1,                       0,          new DummyJournalScan(),     Expected.PASSED},
+                {1,                       1,          new DummyJournalScan(),     Expected.PASSED},
+                {0,                       0,          null,                       Expected.NPE},
+                {0,                       0,          new InvalidJournalScan(),   Expected.IOE},
+
+        });
+    }
+
+    public JournalTest(int journalID, long journalPos, Journal.JournalScanner scanner, Expected expected) {
+        this.journalToUse = journalID;
+        this.journalPos = journalPos;
+        this.scanner = scanner;
+        this.expected = expected;
+
+
+    }
 
     @Before
     public void before() throws Exception {
         this.journal = createJournal();
-        this.journalID = Journal.listJournalIds(this.journal.getJournalDirectory(), null).get(0);
+        this.journalID = Journal.listJournalIds(this.journal.getJournalDirectory(), null).get(journalToUse);
         //ora writtenBytes ha il numero di byte scritti sul Journal, bisogna aggiungere quelli relativi all'update
         //della versione del journal stesso (che è un int).
-        writtenBytes += Integer.BYTES;
+        WRITTEN_BYTES += Integer.BYTES;
 
 
 
@@ -42,19 +80,59 @@ public class JournalTest {
     @Test
     public void testScanJournal() throws Exception {
 
-        long readBytes = this.journal.scanJournal(this.journalID, 0, new DummyJournalScan());
-        assertEquals(writtenBytes, readBytes);
+        long readBytes = 0;
+        try {
+            readBytes = this.journal.scanJournal(this.journalID, this.journalPos, this.scanner);
+        } catch (IOException | NullPointerException e) {
+            actualException = e;
+        }
+        if (this.expected == Expected.EXACT_BYTES) {
+            //ID = 1, pos <= 0
+            assertEquals(WRITTEN_BYTES, readBytes);
+        }
+        else if (this.expected == Expected.PASSED) {
+            assertNull(actualException);
+            assertNotEquals(WRITTEN_BYTES, readBytes);
+        }
+        else {
+            if (this.expected == Expected.NPE)
+                assertEquals(this.actualException.getClass(), NullPointerException.class);
+            else if (this.expected == Expected.IOE)
+                assertEquals(this.actualException.getClass(), IOException.class);
+        }
+
     }
 
 
     //Metodo Apache. Usiamo uno scanner dummy poichè è uno Unit test, e ci "svincoliamo" dalla correttezza e dall'interazione
     //delle altre componenti
-    private class DummyJournalScan implements Journal.JournalScanner {
+    private static class DummyJournalScan implements Journal.JournalScanner {
 
         @Override
         public void process(int journalVersion, long offset, ByteBuffer entry) throws IOException {
             //non fa nulla, metodo dummy
+
         }
+    }
+
+    private static class InvalidJournalScan implements Journal.JournalScanner {
+
+        @Override
+        public void process(int journalVersion, long offset, ByteBuffer entry) throws IOException {
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new FileReader(entry.toString()));
+                reader.readLine();
+            } catch (IOException e) {
+                if (reader != null) {reader.close();}
+                throw new IOException("Eccezione generata dallo scanner non valido");
+            }
+
+        }
+    }
+
+    private enum Expected {
+        IOE, NPE, EXACT_BYTES, PASSED
     }
 
 }
