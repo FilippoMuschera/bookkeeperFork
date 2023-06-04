@@ -1,8 +1,7 @@
-//CLASSE ORIGINALE DI BOOKKEEPER
-package org.apache.bookkeeper.bookie.util;
+//IT ORIGINALLY WAS AN APACHE-BOOKKEEPER TEST CLASS
+package org.apache.bookkeeper.bookie;
 
 import io.netty.buffer.UnpooledByteBufAllocator;
-import org.apache.bookkeeper.bookie.*;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.meta.LedgerManager;
@@ -57,6 +56,12 @@ public class TestBookieImpl extends BookieImpl {
         return buildReadOnly(new ResourceBuilder(conf).build());
     }
 
+    @Override
+    int shutdown(int exitCode) {
+        int ret = super.shutdown(exitCode);
+        resources.cleanup();
+        return ret;
+    }
 
     /**
      * Manages bookie resources including their cleanup.

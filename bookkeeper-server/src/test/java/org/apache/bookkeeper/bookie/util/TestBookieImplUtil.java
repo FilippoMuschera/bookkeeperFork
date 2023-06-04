@@ -109,13 +109,13 @@ public class TestBookieImplUtil {
 
     }
 
-    public static void newTempDir(String category) {
-        String folderName = "temp-folder-" + category + FOLDER_COUNT;
+    public static void newTempDir(String dirSuffix) {
+        String folderName = "temp-folder-" + dirSuffix + FOLDER_COUNT;
         File directory = new File(folderName);
         directory.mkdir(); //se è false la cartella è già presente, che è comunque ok
         FOLDER_COUNT++;
         folderList.add(directory);
-        addToCategoryList(directory, category);
+        addToCategoryList(directory, dirSuffix);
     }
 
     private static void addToCategoryList(File directory, String category) {
