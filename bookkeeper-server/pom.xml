@@ -329,6 +329,7 @@
           <threads>8</threads>
           <targetClasses>
             <param>org.apache.bookkeeper.bookie.BookieImpl</param>
+            <param>org.apache.bookkeeper.bookie.Journal</param>
           </targetClasses>
           <targetTests>
             <param>org.apache.bookkeeper.bookie.*</param>

@@ -135,4 +135,55 @@ public class ApacheBookieJournalUtil {
         return res;
     }
 
+
+    public static JournalChannel writeV5Journal(File journalDir, int numEntries,
+                                         byte[] masterKey) throws Exception {
+        return writeV5Journal(journalDir, numEntries, masterKey, false);
+    }
+
+    static JournalChannel writeV5Journal(File journalDir, int numEntries,
+                                         byte[] masterKey, boolean corruptLength) throws Exception {
+        long logId = System.currentTimeMillis();
+        JournalChannel jc = new JournalChannel(journalDir, logId);
+
+        BufferedChannel bc = jc.getBufferedChannel();
+
+        ByteBuf paddingBuff = Unpooled.buffer();
+        paddingBuff.writeZero(2 * JournalChannel.SECTOR_SIZE);
+        byte[] data = new byte[4 * 1024 * 1024];
+        Arrays.fill(data, (byte) 'X');
+        long lastConfirmed = LedgerHandle.INVALID_ENTRY_ID;
+        long length = 0;
+        for (int i = 0; i <= numEntries; i++) {
+            ByteBuf packet;
+            if (i == 0) {
+                packet = generateMetaEntry(1, masterKey);
+            } else {
+                packet = generatePacket(1, i, lastConfirmed, length, data, 0, i);
+            }
+            lastConfirmed = i;
+            length += i;
+            ByteBuf lenBuff = Unpooled.buffer();
+            if (corruptLength) {
+                lenBuff.writeInt(-1);
+            } else {
+                lenBuff.writeInt(packet.readableBytes());
+            }
+            bc.write(lenBuff);
+            bc.write(packet);
+            ReferenceCountUtil.release(packet);
+            Journal.writePaddingBytes(jc, paddingBuff, JournalChannel.SECTOR_SIZE);
+        }
+        // write fence key
+        ByteBuf packet = generateFenceEntry(1);
+        ByteBuf lenBuf = Unpooled.buffer();
+        lenBuf.writeInt(packet.readableBytes());
+        bc.write(lenBuf);
+        bc.write(packet);
+        Journal.writePaddingBytes(jc, paddingBuff, JournalChannel.SECTOR_SIZE);
+        bc.flushAndForceWrite(false);
+        updateJournalVersion(jc, JournalChannel.V5);
+        return jc;
+    }
+
 }

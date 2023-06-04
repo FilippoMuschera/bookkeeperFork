@@ -10,12 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.bookkeeper.bookie.ApacheBookieJournalUtil.writeV4Journal;
+import static org.apache.bookkeeper.bookie.ApacheBookieJournalUtil.writeV5Journal;
 
 public class JournalUtil {
 
     private static BookieImpl bookie;
     private static List<File> tempDirs = new ArrayList<>();
-    public static final int NUM_OF_ENTRIES_ON_FIRST_JOURNAL = 200;
+    public static final int NUM_OF_ENTRIES_ON_JOURNAL = 200;
 
     public static File tempDir(String dirSuffix) throws IOException {
         String prefix = "temp-folder-";
@@ -55,8 +56,31 @@ public class JournalUtil {
         BookieImpl.checkDirectoryStructure(BookieImpl.getCurrentDirectory(journalDir));
         BookieImpl.checkDirectoryStructure(BookieImpl.getCurrentDirectory(ledgerDir));
 
-        JournalChannel jc = writeV4Journal(BookieImpl.getCurrentDirectory(journalDir), NUM_OF_ENTRIES_ON_FIRST_JOURNAL, "test".getBytes());
+        JournalChannel jc = writeV4Journal(BookieImpl.getCurrentDirectory(journalDir), NUM_OF_ENTRIES_ON_JOURNAL, "test".getBytes());
         JournalTest.WRITTEN_BYTES = jc.fc.position();
+
+
+        ServerConfiguration conf = TestBKConfiguration.newServerConfiguration();
+        conf
+                .setJournalDirsName(new String[] {journalDir.getPath()})
+                .setLedgerDirNames(new String[] { ledgerDir.getPath() })
+                .setMetadataServiceUri(null);
+
+        bookie = new TestBookieImpl(conf);
+        return bookie.journals.get(0);
+
+    }
+
+    public static Journal createJournalV5() throws Exception {
+
+        File journalDir = tempDir("journal");
+
+        File ledgerDir = tempDir("ledger");
+        BookieImpl.checkDirectoryStructure(BookieImpl.getCurrentDirectory(journalDir));
+        BookieImpl.checkDirectoryStructure(BookieImpl.getCurrentDirectory(ledgerDir));
+
+        JournalChannel jc = writeV5Journal(BookieImpl.getCurrentDirectory(journalDir), NUM_OF_ENTRIES_ON_JOURNAL, "test".getBytes());
+        JournalV5Test.WRITTEN_BYTES_V5 = jc.fc.position();
 
 
         ServerConfiguration conf = TestBKConfiguration.newServerConfiguration();
