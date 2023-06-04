@@ -16,7 +16,6 @@ public class JournalUtil {
     private static BookieImpl bookie;
     private static List<File> tempDirs = new ArrayList<>();
     public static final int NUM_OF_ENTRIES_ON_FIRST_JOURNAL = 200;
-    public static final int NUM_OF_ENTRIES_ON_SECOND_JOURNAL = 100;
 
     public static File tempDir(String dirSuffix) throws IOException {
         String prefix = "temp-folder-";
@@ -33,6 +32,7 @@ public class JournalUtil {
             for (File dir : tempDirs) {
                 deleteDirectory(dir);
             }
+            tempDirs.clear();
     }
 
     private static void deleteDirectory(File dir) {
@@ -50,21 +50,18 @@ public class JournalUtil {
     public static Journal createJournal() throws Exception {
 
         File journalDir = tempDir("journal");
-        File journalDir2 = tempDir("journal2");
 
         File ledgerDir = tempDir("ledger");
         BookieImpl.checkDirectoryStructure(BookieImpl.getCurrentDirectory(journalDir));
-        BookieImpl.checkDirectoryStructure(BookieImpl.getCurrentDirectory(journalDir2));
         BookieImpl.checkDirectoryStructure(BookieImpl.getCurrentDirectory(ledgerDir));
 
         JournalChannel jc = writeV4Journal(BookieImpl.getCurrentDirectory(journalDir), NUM_OF_ENTRIES_ON_FIRST_JOURNAL, "test".getBytes());
         JournalTest.WRITTEN_BYTES = jc.fc.position();
-        writeV4Journal(BookieImpl.getCurrentDirectory(journalDir), NUM_OF_ENTRIES_ON_SECOND_JOURNAL, "test".getBytes());
 
 
         ServerConfiguration conf = TestBKConfiguration.newServerConfiguration();
         conf
-                .setJournalDirsName(new String[] {journalDir.getPath(), journalDir2.getPath()})
+                .setJournalDirsName(new String[] {journalDir.getPath()})
                 .setLedgerDirNames(new String[] { ledgerDir.getPath() })
                 .setMetadataServiceUri(null);
 

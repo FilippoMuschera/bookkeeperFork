@@ -12,10 +12,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import static org.apache.bookkeeper.bookie.JournalUtil.*;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @RunWith(Parameterized.class)
@@ -25,10 +23,10 @@ public class JournalTest {
     public static long WRITTEN_BYTES;
     private final long EMPTY_JOURNAL_BYTES = 516L;
     private Journal journal;
-    private int journalToUse;
-    private long journalPos;
-    private Journal.JournalScanner scanner;
-    private Expected expected;
+    private final int journalToUse;
+    private final long journalPos;
+    private final Journal.JournalScanner scanner;
+    private final Expected expected;
     private Exception actualException = null;
     private long journalID;
 
@@ -61,7 +59,7 @@ public class JournalTest {
     @Before
     public void before() throws Exception {
         this.journal = createJournal();
-        this.journalID = Journal.listJournalIds(this.journal.getJournalDirectory(), null).get(journalToUse);
+        this.journalID = this.journalToUse == 0 ?  Journal.listJournalIds(this.journal.getJournalDirectory(), null).get(0) : 1;
         //ora writtenBytes ha il numero di byte scritti sul Journal, bisogna aggiungere quelli relativi all'update
         //della versione del journal stesso (che è un int).
         WRITTEN_BYTES += Integer.BYTES;
@@ -78,7 +76,7 @@ public class JournalTest {
 
     }
     @Test
-    public void testScanJournal() throws Exception {
+    public void testScanJournal() {
 
         long readBytes = 0;
         try {
@@ -88,11 +86,17 @@ public class JournalTest {
         }
         if (this.expected == Expected.EXACT_BYTES) {
             //ID = 1, pos <= 0
+            assertNull(actualException);
             assertEquals(WRITTEN_BYTES, readBytes);
         }
         else if (this.expected == Expected.PASSED) {
             assertNull(actualException);
+            //Non ho letto dal journal che ho scritto in createJournal(), ma da uno vuoto creato sul momento dello scan
             assertNotEquals(WRITTEN_BYTES, readBytes);
+            if (this.journalToUse == 1)
+                //Questo controllo va fatto solo se l'id del journal era di un journal non esistente,
+                //perchè in quel caso ne viene creato uno vuoto, di dimensione nota.
+                assertEquals(EMPTY_JOURNAL_BYTES, readBytes); //Non ho letto il primo journal, ne leggo uno che è vuoto
         }
         else {
             if (this.expected == Expected.NPE)
