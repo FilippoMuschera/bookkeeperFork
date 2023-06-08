@@ -420,8 +420,8 @@
               <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
               <rerunFailingTestsCount>${testRetryCount}</rerunFailingTestsCount>
               <argLine>
-                @{argLine} -javaagent:${project.basedir}/../badua-lib/ba-dua-agent-rt-0.6.0-all.jar
-                -Xbootclasspath/p:${project.basedir}/../badua-lib/ba-dua-agent-rt-0.6.0-all.jar
+                @{argLine} -javaagent:${project.basedir}/badua-lib/ba-dua-agent-rt-0.6.0-all.jar
+                -Xbootclasspath/p:${project.basedir}/badua-lib/ba-dua-agent-rt-0.6.0-all.jar
               </argLine>
             </configuration>
           </plugin>
