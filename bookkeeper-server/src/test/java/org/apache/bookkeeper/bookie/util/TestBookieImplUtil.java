@@ -1,6 +1,7 @@
 package org.apache.bookkeeper.bookie.util;
 
 import org.apache.bookkeeper.net.DNS;
+import org.apache.bookkeeper.util.PortManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +33,7 @@ public class TestBookieImplUtil {
                     while (interfaces.hasMoreElements()) {
                         NetworkInterface iface = interfaces.nextElement();
                         String host = DNS.getDefaultHost(iface.getName());
-                        String ip = new InetSocketAddress(host, 0).getAddress().getHostAddress();
+                        String ip = new InetSocketAddress(host, PortManager.nextFreePort()).getAddress().getHostAddress();
 
                         if (address.equals(ip))
                             return iface.getName();
