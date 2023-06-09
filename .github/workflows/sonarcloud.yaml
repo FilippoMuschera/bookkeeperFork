@@ -35,3 +35,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify -P jacoco-profile org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=FilippoMuschera_bookkeeperTestForCI
+
+      - name: Archive badua coverage results
+        uses: actions/upload-artifact@v3
+        with:
+              name: jacoco-coverage-report
+              path: jacoco-report/target/site/jacoco-aggregate/index.html
+              if-no-files-found: error
