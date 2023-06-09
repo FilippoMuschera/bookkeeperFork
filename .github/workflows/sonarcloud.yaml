@@ -40,5 +40,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
               name: jacoco-coverage-report
-              path: jacoco-report/target/site/jacoco-aggregate/index.html
+              path: jacoco-report/target/site/jacoco-aggregate/
               if-no-files-found: error
