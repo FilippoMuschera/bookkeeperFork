@@ -1,11 +1,11 @@
 package org.apache.bookkeeper.bookie;
 
 import io.netty.buffer.*;
+import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.meta.NullMetadataBookieDriver;
-import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.proto.SimpleBookieServiceInfoProvider;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.stats.StatsLogger;
@@ -14,12 +14,14 @@ import org.apache.bookkeeper.util.PortManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -27,13 +29,11 @@ import static org.junit.Assert.*;
 
 public class BookieImplTest {
 
-    private BookieImpl bookieImpl;
     private final String LEDGER_STRING = "ledger";
     private final List<File> dirs = new ArrayList<>();
-    private File[] ledgerFiles;
-
     private final int flushInterval = 1000;
-
+    private BookieImpl bookieImpl;
+    private File[] ledgerFiles;
 
     //TODO parametrizzare i diversi tip di oggetti (dove possibile) e i parametri innteri dove non già testati in altre classi
     @Before
@@ -79,79 +79,84 @@ public class BookieImplTest {
     }
 
     @Test
-    public void basicBookieTest() throws IOException {
+    public void setUpBookieTest() throws IOException {
+
+        //Serie di assert volti a controllare la correttezza del setup del Bookie
 
         assertTrue(bookieImpl.isRunning());
         assertFalse(bookieImpl.isReadOnly());
         assertTrue(bookieImpl.getTotalDiskSpace() >= bookieImpl.getTotalFreeSpace());
         assertTrue(bookieImpl.isAvailableForHighPriorityWrites());
+        List<File> currDirs = new ArrayList<>(Arrays.asList(BookieImpl.getCurrentDirectories(ledgerFiles)));
+        for (File ledgerFile : ledgerFiles) assertTrue(currDirs.contains(BookieImpl.getCurrentDirectory(ledgerFile)));
+
 
     }
 
     @Test
-    public void readWriteLedgerTest() throws IOException, InterruptedException, BookieException {
+    public void noWritableLedgerTest() throws IOException, InterruptedException, BookieException, BKException {
         ByteBuf buffer = Unpooled.buffer();
         long ledgerId = 1;
         long entry = 0;
-        long lastConf = (long) (Math.random() * 10);
+        long lastConf = -1;
         buffer.writeLong(ledgerId);
         buffer.writeLong(entry);
         buffer.writeLong(lastConf);
-        Object expectedCtx = "foo";
+        String mockMsgError = "Error correctly thrown from the mock";
 
-        bookieImpl.addEntry(buffer, true, (int rc, long ledgerId1, long entryId1,
-                                           BookieId addr, Object ctx) -> {
-            assertSame(expectedCtx, ctx);
-            assertEquals(ledgerId, ledgerId1);
-            assertEquals(entry, entryId1);
-        }, "foo", "key".getBytes());
-        Thread.sleep((long) (1.2*flushInterval)); //Do tempo al bookie di flushare la nuova entry
-        long actualLastAdd = bookieImpl.ledgerStorage.getLastAddConfirmed(ledgerId);
-        assertEquals(lastConf, actualLastAdd);
+        //Setto i mock necessari. In questa fase di Unit test non abbiamo interesse a testare le interazioni con gli altri
+        //oggetti, vogliamo solamente testare BookieImpl in isolamento.
+
+        LedgerDescriptor mockedDescriptor = Mockito.mock(LedgerDescriptorImpl.class);
+        Mockito.when(mockedDescriptor.isFenced()).thenReturn(false);
+        Mockito.when(mockedDescriptor.getLedgerId()).thenAnswer(invocationOnMock -> {
+           throw  new LedgerDirsManager.NoWritableLedgerDirException(mockMsgError);
+        });
+        BookieImpl spiedBookie = Mockito.spy(bookieImpl);
+        Mockito.doReturn(mockedDescriptor).when(spiedBookie).getLedgerForEntry(buffer, "mock".getBytes());
+
+        try {
+            spiedBookie.addEntry(buffer, true, null, "foo", "mock".getBytes());
+        } catch (IOException e) {
+            assertTrue(e.getMessage().contains(mockMsgError)); //Voglio assicurarmi che sia proprio la NoWritableLedgerException lanciata dal mock
+            return;
+        }
+        fail("I should have caught a NoWritableLedgerDirException, but it wasn't thrown!");
+
 
 
     }
 
     @Test
     public void fenceExceptionTest() throws IOException, InterruptedException, BookieException {
-        long ledgerId = (long) (Math.random() * 10 + 1);
-         addAnEntry(ledgerId); //Questa deve andare a buon fine, voglio che venga creato un ledger un ledger
+        int ledgerId = 1;
+        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer();
+        long entry = 5;
+        long lastConf = -1;
+        buffer.writeLong(ledgerId);
+        buffer.writeLong(entry);
+        buffer.writeLong(lastConf);
+
+
+        LedgerDescriptor mockedDescriptor = Mockito.mock(LedgerDescriptorImpl.class);
+        Mockito.when(mockedDescriptor.isFenced()).thenReturn(true);
+        BookieImpl spiedBookie = Mockito.spy(bookieImpl);
+        Mockito.doReturn(mockedDescriptor).when(spiedBookie).getLedgerForEntry(buffer, "mock".getBytes());
+
         try {
-            bookieImpl.getLedgerStorage().setFenced(ledgerId);
-            assertTrue(bookieImpl.getLedgerStorage().isFenced(ledgerId));
-            addAnEntry(ledgerId);
+            spiedBookie.addEntry(buffer, true, null, "foo", "mock".getBytes());
+
 
         } catch (BookieException bookieException) {
             assertEquals(BookieException.Code.LedgerFencedException, bookieException.getCode());
             return;
         }
-        fail("I had to catch a BookieException for a fenced ledger, but I didn't");
-
-
+        fail("I should have caught a BookieException for a fenced ledger, but I didn't");
 
 
     }
 
-    private void addAnEntry(long ledgerId) throws IOException, InterruptedException, BookieException {
-        ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer();
-        long entry = 5;
-        long lastConf = (long) (Math.random() * 10);
-        buffer.writeLong(ledgerId);
-        buffer.writeLong(entry);
-        buffer.writeLong(lastConf);
-        Object expectedCtx = "foo";
 
-
-            bookieImpl.addEntry(buffer, true, (int rc, long ledgerId1, long entryId1,
-                                               BookieId addr, Object ctx) -> {
-                assertSame(expectedCtx, ctx);
-                assertEquals(ledgerId, ledgerId1);
-                assertEquals(entry, entryId1);
-            }, "foo", "key".getBytes());
-        Thread.sleep((long) (1.2*flushInterval)); //Do tempo al bookie di flushare la nuova entry
-        long actualLastAdd = bookieImpl.ledgerStorage.getLastAddConfirmed(ledgerId);
-        assertEquals(lastConf, actualLastAdd);
-    }
 
     @After
     public void after() {
@@ -160,6 +165,7 @@ public class BookieImplTest {
         }
         int exitCode = bookieImpl.shutdown();
         assertEquals(ExitCode.OK, exitCode);
+        assertFalse(bookieImpl.isRunning());
     }
 
     private File[] generateIndexDirs(int n) throws IOException {
@@ -177,7 +183,7 @@ public class BookieImplTest {
             ledgerFiles = new File[n];
         }
         String[] ret = new String[n];
-        for (int i = 0; i < n; i++){
+        for (int i = 0; i < n; i++) {
             Path path = Files.createTempDirectory(suffix + i);
             dirs.add(path.toFile());
             ret[i] = path.toFile().getPath();
@@ -190,6 +196,6 @@ public class BookieImplTest {
     }
 
 
-
-
 }
+
+
