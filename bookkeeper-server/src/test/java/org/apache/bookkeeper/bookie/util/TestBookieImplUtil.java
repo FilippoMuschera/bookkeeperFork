@@ -51,7 +51,7 @@ public class TestBookieImplUtil {
 
 
     public enum ExpectedValue {
-        PASSED, UH_EXCEPTION, IA_EXCEPTION
+        PASSED, UH_EXCEPTION, IO_EXCEPTION, NO_SPACE_EXCEPTION, IA_EXCEPTION
     }
 
     public enum DataType {

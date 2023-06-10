@@ -10,8 +10,10 @@ import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.meta.NullMetadataBookieDriver;
+import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.DiskChecker;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,6 +33,9 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.EMPTY;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.PASSED;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.NO_SPACE_EXCEPTION;
 import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
@@ -61,7 +66,7 @@ public class BookieImplTest {
         this.bundle = bundle;
         conf.setBookiePort(bundle.bookiePort);
         String[] jourDirs;
-        if (bundle.journalDirs == DataType.EMPTY)
+        if (bundle.journalDirs == EMPTY)
             jourDirs = new String[]{};
         else if (bundle.journalDirs == DataType.NULL)
             jourDirs = null;
@@ -72,13 +77,13 @@ public class BookieImplTest {
 
         }
         String[] ledgDirs;
-        if (bundle.ledgDirs == DataType.EMPTY)
+        if (bundle.ledgDirs == EMPTY)
             ledgDirs = new String[]{};
         else if (bundle.ledgDirs == DataType.NULL)
             ledgDirs = null;
         else {
             ledgDirs = generateTempDirs(3, LEDGER_STRING);
-            if (bundle.journalDirs == DataType.INVALID)
+            if (bundle.ledgDirs == DataType.INVALID)
                 ledgDirs[0] = "notAPath\0"; //Invalidiamo uno dei path
 
         }
@@ -94,9 +99,16 @@ public class BookieImplTest {
         reg = bundle.registrationManager;
         ledgerStorage = bundle.ledgerStorage;
         diskChecker = bundle.diskChecker;
-        indexDirs = generateIndexDirs(3);
-        ledgerDirsManager = this.getCorresponfingLedgerDirsManager(bundle.ledgerDirsManagerType, conf, indexDirs, diskChecker);
-        indexDirsManager = this.getCorresponfingLedgerDirsManager(bundle.indexDirsManager, conf, indexDirs, diskChecker);
+
+        if (bundle.indexDirs == EMPTY)
+            indexDirs = new File[]{};
+        else if (bundle.indexDirs == DataType.NULL)
+            indexDirs = null;
+        else {
+            indexDirs = generateIndexDirs(3);
+        }
+        ledgerDirsManager = getCorrespondingLedgerDirsManager(bundle.ledgerDirsManagerType, conf, indexDirs, diskChecker);
+        indexDirsManager = getCorrespondingLedgerDirsManager(bundle.indexDirsManager, conf, indexDirs, diskChecker);
         statsLogger = bundle.statsLogger;
         byteBufAllocator = bundle.byteBufAllocator;
         bookieServiceInfo = bundle.bookieServiceInfoSupplier;
@@ -108,77 +120,23 @@ public class BookieImplTest {
     public static Collection<InputBundle> getParams() throws IOException {
         Collection<InputBundle> validInputs = new ArrayList<>();
         String il = "org.apache.bookkeeper.bookie.InterleavedLedgerStorage";
-       // String sorted = "org.apache.bookkeeper.bookie.SortedLedgerStorage";
         String db = "org.apache.bookkeeper.bookie.storage.ldb.DbLedgerStorage";
         validInputs.add(InputBundle.getDefault());
         validInputs.add(InputBundle.getDefault().setBookiePort(1));
         validInputs.add(InputBundle.getDefault().setLogPerLedger(false).setRegistrationManager(null).setByteBufAllocator(PooledByteBufAllocator.DEFAULT));
-        validInputs.add(InputBundle.getDefault().setJournalDirs(DataType.EMPTY).setLedgDirs(DataType.EMPTY));
+        validInputs.add(InputBundle.getDefault().setJournalDirs(EMPTY).setLedgDirs(EMPTY).setIndexDirs(EMPTY).setExpectedValue(NO_SPACE_EXCEPTION));
         validInputs.add(InputBundle.getDefault().setLedgerStorage(LedgerStorageFactory.createLedgerStorage(il)));
         validInputs.add(InputBundle.getDefault().setLedgerStorage(LedgerStorageFactory.createLedgerStorage(db)));
 
 
-
-/*        for (int port : new int[]{0, 1}) {
-            for (DataType journalDirs : Arrays.asList(DataType.VALID, DataType.EMPTY)) {
-                for (DataType ledgDirs : Arrays.asList(DataType.VALID, DataType.EMPTY)) {
-
-                    for (boolean logPerLedger : Arrays.asList(true, false)) {
-                        for (RegistrationManager registrationManager : Arrays.asList(null,
-                                new NullMetadataBookieDriver.NullRegistrationManager())) {
-
-                            for (LedgerStorage ledgerStorage : Arrays.asList(LedgerStorageFactory.createLedgerStorage(il),
-                                    LedgerStorageFactory.createLedgerStorage(sorted), LedgerStorageFactory.createLedgerStorage(db))) {
-                                for (DataType ledgerDirManagerType : Collections.singletonList(DataType.VALID)) {
-                                    for (DataType indexDirs : Collections.singletonList(DataType.VALID)) {
-                                        for (DataType inedxDirsManager : Collections.singletonList(DataType.VALID)) {
-                                                InputBundle bundle = new InputBundle(
-                                                        port,
-                                                        journalDirs,
-                                                        ledgDirs,
-                                                        10000,
-                                                        logPerLedger,
-                                                        registrationManager,
-                                                        ledgerStorage,
-                                                        validDiskChecker,
-                                                        ledgerDirManagerType,
-                                                        indexDirs,
-                                                        inedxDirsManager,
-                                                        new NullStatsLogger(),
-                                                        UnpooledByteBufAllocator.DEFAULT,
-                                                        new SimpleBookieServiceInfoProvider(TestBKConfiguration.newServerConfiguration()),
-                                                        ExpectedValue.PASSED
-
-                                                );
-                                                validInputs.add(bundle);
-                                        }
-                                    }
-                                }
-
-                            }
-
-                        }
-                    }
-
-                }
-            }
-
-        }*/
 
 
         return validInputs;
 
     }
 
-    @AfterClass
-    public static void delDirs() {
-        for (File dir : dirs) {
-            dir.delete();
-        }
-        dirs.clear();
-    }
 
-    private static File[] generateIndexDirs(int n) throws IOException {
+    public static File[] generateIndexDirs(int n) throws IOException {
         File[] indexFiles = new File[n];
         for (int i = 0; i < n; i++) {
             indexFiles[i] = Files.createTempDirectory("index" + i).toFile();
@@ -188,7 +146,7 @@ public class BookieImplTest {
         return indexFiles;
     }
 
-    private LedgerDirsManager getCorresponfingLedgerDirsManager(DataType ledgerDirsManagerType, ServerConfiguration conf, File[] indexDirs, DiskChecker diskChecker) throws IOException {
+    public static LedgerDirsManager getCorrespondingLedgerDirsManager(DataType ledgerDirsManagerType, ServerConfiguration conf, File[] indexDirs, DiskChecker diskChecker) throws IOException {
         switch (ledgerDirsManagerType) {
             case NULL:
                 return null;
@@ -227,7 +185,10 @@ public class BookieImplTest {
         //Serie di assert volti a controllare la correttezza del setup del Bookie
 
         assertTrue(bookieImpl.isRunning());
-        assertFalse(bookieImpl.isReadOnly());
+        if(bundle.ledgDirs == EMPTY && bundle.ledgDirs == EMPTY && bundle.indexDirs == EMPTY) //se non ha cartelle mi aspetto che sia un bookie su cui non posso scrivere
+            assertTrue(bookieImpl.isReadOnly());
+        else
+            assertFalse(bookieImpl.isReadOnly());
         assertTrue(bookieImpl.getTotalDiskSpace() >= bookieImpl.getTotalFreeSpace());
         assertTrue(bookieImpl.isAvailableForHighPriorityWrites());
         List<File> currDirs = new ArrayList<>(Arrays.asList(BookieImpl.getCurrentDirectories(ledgerFiles)));
@@ -302,12 +263,52 @@ public class BookieImplTest {
 
     }
 
+    @Test
+    public void addEntryExceptionTest() {
+        ByteBuf buffer = Unpooled.buffer();
+        long ledgerId = 1;
+        long entry = 0;
+        long lastConf = -1;
+        buffer.writeLong(ledgerId);
+        buffer.writeLong(entry);
+        buffer.writeLong(lastConf);
+        String expectedCtx = "foo";
+
+        try {
+            bookieImpl.addEntry(buffer, true, (int rc, long ledgerId1, long entryId1,
+                                               BookieId addr, Object ctx) -> {
+                assertSame(expectedCtx, ctx);
+                assertEquals(ledgerId, ledgerId1);
+                assertEquals(entry, entryId1);
+            }, "foo", "key".getBytes());
+
+        } catch (Exception e) {
+            assertEquals(NO_SPACE_EXCEPTION, bundle.expectedValue);
+            return;
+        }
+        assertEquals(PASSED, bundle.expectedValue);
+
+
+
+
+
+    }
+
     @After
-    public void after() {
+    public void after() throws IOException {
 
         int exitCode = bookieImpl.shutdown();
         assertEquals(ExitCode.OK, exitCode);
         assertFalse(bookieImpl.isRunning());
+        for (File dir : dirs) {
+            FileUtils.deleteDirectory(dir);
+
+        }
+        FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir") + "/bk-txn"));
+        dirs.clear();
+        Mockito.clearAllCaches();
+        System.gc();
+
     }
 
     private String[] generateTempDirs(int n, String suffix) throws IOException {
