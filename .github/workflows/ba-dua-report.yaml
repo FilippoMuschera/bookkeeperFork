@@ -5,6 +5,9 @@ on:
    branches:
       - master
 
+default:
+  run:
+    timeout-minutes: 8
 
 jobs:
   build:
@@ -18,7 +21,7 @@ jobs:
         java-version: 8
         distribution: 'adopt'
     - name: Build and Test with Maven
-      run: mvn clean verify -P badua-profile
+      run: mvn clean verify -P badua-profile -e -X
     - name: Archive badua coverage results
       uses: actions/upload-artifact@v3
       with:

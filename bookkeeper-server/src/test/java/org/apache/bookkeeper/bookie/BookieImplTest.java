@@ -90,7 +90,6 @@ public class BookieImplTest {
         conf.setEntryLogPerLedgerEnabled(bundle.logPerLedger);
         if (hasBookieId) {
             conf.setBookieId("localhost:" + bundle.bookiePort);
-            hasBookieId = false;
         }
         reg = bundle.registrationManager;
         ledgerStorage = bundle.ledgerStorage;
@@ -233,6 +232,10 @@ public class BookieImplTest {
         assertTrue(bookieImpl.isAvailableForHighPriorityWrites());
         List<File> currDirs = new ArrayList<>(Arrays.asList(BookieImpl.getCurrentDirectories(ledgerFiles)));
         for (File ledgerFile : ledgerFiles) assertTrue(currDirs.contains(BookieImpl.getCurrentDirectory(ledgerFile)));
+        if (hasBookieId) {
+            assertEquals("localhost:"+conf.getBookiePort(), BookieImpl.getBookieId(conf).toString());
+            hasBookieId = false;
+        }
 
 
     }
