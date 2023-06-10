@@ -304,10 +304,16 @@ public class BookieImplTest {
             FileUtils.deleteDirectory(dir);
 
         }
-        FileUtils.deleteDirectory(new File(System.getProperty("java.io.tmpdir") + "/bk-txn"));
+        try {
+            FileUtils.deleteDirectory(new File("/tmp/bk-txn"));
+
+        } catch (Exception e) {
+            //just go on, since line in the try is not really cross-system compatible
+            e.printStackTrace();
+        }
         dirs.clear();
         Mockito.clearAllCaches();
-        System.gc();
+        //System.gc();
 
     }
 
