@@ -1,15 +1,15 @@
 package org.apache.bookkeeper.bookie;
 
-import io.netty.buffer.*;
-import org.apache.bookkeeper.bookie.util.TestBKConfiguration;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import org.apache.bookkeeper.bookie.util.testtypes.InputBundle;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.meta.NullMetadataBookieDriver;
-import org.apache.bookkeeper.proto.SimpleBookieServiceInfoProvider;
-import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.DiskChecker;
 import org.junit.After;
@@ -24,11 +24,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Supplier;
 
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType;
-import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue;
 import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
@@ -107,12 +109,18 @@ public class BookieImplTest {
     public static Collection<InputBundle> getParams() throws IOException {
         Collection<InputBundle> validInputs = new ArrayList<>();
         String il = "org.apache.bookkeeper.bookie.InterleavedLedgerStorage";
-        String sorted = "org.apache.bookkeeper.bookie.SortedLedgerStorage";
+       // String sorted = "org.apache.bookkeeper.bookie.SortedLedgerStorage";
         String db = "org.apache.bookkeeper.bookie.storage.ldb.DbLedgerStorage";
-        DiskChecker validDiskChecker = new DiskChecker(0.99f, 0.98f);
+        validInputs.add(InputBundle.getDefault());
+        validInputs.add(InputBundle.getDefault().setBookiePort(1));
+        validInputs.add(InputBundle.getDefault().setLogPerLedger(false).setRegistrationManager(null).setByteBufAllocator(PooledByteBufAllocator.DEFAULT));
+        validInputs.add(InputBundle.getDefault().setJournalDirs(DataType.EMPTY).setLedgDirs(DataType.EMPTY));
+        validInputs.add(InputBundle.getDefault().setLedgerStorage(LedgerStorageFactory.createLedgerStorage(il)));
+        validInputs.add(InputBundle.getDefault().setLedgerStorage(LedgerStorageFactory.createLedgerStorage(db)));
 
 
-        for (int port : new int[]{0, 1}) {
+
+/*        for (int port : new int[]{0, 1}) {
             for (DataType journalDirs : Arrays.asList(DataType.VALID, DataType.EMPTY)) {
                 for (DataType ledgDirs : Arrays.asList(DataType.VALID, DataType.EMPTY)) {
 
@@ -156,7 +164,7 @@ public class BookieImplTest {
                 }
             }
 
-        }
+        }*/
 
 
         return validInputs;

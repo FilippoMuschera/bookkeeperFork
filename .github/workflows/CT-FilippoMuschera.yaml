@@ -16,4 +16,4 @@ jobs:
         java-version: 11
         distribution: 'adopt'
     - name: Build and Test with Maven
-      run: mvn clean verify
+      run: mvn -T 1C clean verify
