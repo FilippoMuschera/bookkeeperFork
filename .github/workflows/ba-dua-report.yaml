@@ -5,13 +5,12 @@ on:
    branches:
       - master
 
-default:
-  run:
-    timeout-minutes: 8
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
+
 
     steps:
     - uses: actions/checkout@v2
@@ -21,7 +20,7 @@ jobs:
         java-version: 8
         distribution: 'adopt'
     - name: Build and Test with Maven
-      run: mvn clean verify -P badua-profile -e -X
+      run: mvn -T 6 clean verify -P badua-profile -e -X
     - name: Archive badua coverage results
       uses: actions/upload-artifact@v3
       with:
