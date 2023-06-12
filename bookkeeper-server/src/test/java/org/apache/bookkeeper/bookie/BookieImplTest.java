@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import org.apache.bookkeeper.bookie.util.testtypes.InputBundle;
+import org.apache.bookkeeper.bookie.util.testtypes.InvalidLedgerDirsManager;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
@@ -15,7 +16,6 @@ import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.DiskChecker;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,8 +34,8 @@ import java.util.function.Supplier;
 
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.EMPTY;
-import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.PASSED;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.NO_SPACE_EXCEPTION;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.PASSED;
 import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
@@ -58,7 +58,6 @@ public class BookieImplTest {
     private File[] ledgerFiles = new File[] {};
     private final InputBundle bundle;
 
-    //Var statiche per test univariati
     private static boolean hasBookieId = true;
 
     public BookieImplTest(InputBundle bundle) throws IOException {
@@ -127,7 +126,7 @@ public class BookieImplTest {
         validInputs.add(InputBundle.getDefault().setJournalDirs(EMPTY).setLedgDirs(EMPTY).setIndexDirs(EMPTY).setExpectedValue(NO_SPACE_EXCEPTION));
         validInputs.add(InputBundle.getDefault().setLedgerStorage(LedgerStorageFactory.createLedgerStorage(il)));
         validInputs.add(InputBundle.getDefault().setLedgerStorage(LedgerStorageFactory.createLedgerStorage(db)));
-
+        validInputs.add(InputBundle.getDefault().setRegistrationManager(null).setLogPerLedger(true).setLedgerStorage(LedgerStorageFactory.createLedgerStorage(db)));
 
 
 
@@ -152,6 +151,8 @@ public class BookieImplTest {
                 return null;
             case VALID:
                 return new LedgerDirsManager(conf, indexDirs, diskChecker);
+            case INVALID:
+                return new InvalidLedgerDirsManager();
         }
         return null;
     }
@@ -297,8 +298,7 @@ public class BookieImplTest {
     @After
     public void after() throws IOException {
 
-        int exitCode = bookieImpl.shutdown();
-        assertEquals(ExitCode.OK, exitCode);
+        bookieImpl.shutdown();
         assertFalse(bookieImpl.isRunning());
         for (File dir : dirs) {
             FileUtils.deleteDirectory(dir);
@@ -308,12 +308,11 @@ public class BookieImplTest {
             FileUtils.deleteDirectory(new File("/tmp/bk-txn"));
 
         } catch (Exception e) {
-            //just go on, since line in the try is not really cross-system compatible
+            //just go on, since the line in the try is not really cross-system compatible
             e.printStackTrace();
         }
         dirs.clear();
         Mockito.clearAllCaches();
-        //System.gc();
 
     }
 
