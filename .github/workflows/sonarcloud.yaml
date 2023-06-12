@@ -36,7 +36,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify -P jacoco-profile org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=FilippoMuschera_bookkeeperTestForCI
 
-      - name: Archive badua coverage results
+      - name: Archive jacoco coverage results
         uses: actions/upload-artifact@v3
         with:
               name: jacoco-coverage-report
