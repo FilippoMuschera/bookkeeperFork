@@ -34,6 +34,7 @@ import java.util.function.Supplier;
 
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.EMPTY;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.VALID;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.NO_SPACE_EXCEPTION;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.PASSED;
 import static org.junit.Assert.*;
@@ -43,7 +44,6 @@ public class BookieImplTest {
 
     private static final List<File> dirs = new ArrayList<>();
     private final String LEDGER_STRING = "ledger";
-    private final int flushInterval = 1000;
     ServerConfiguration conf = new ServerConfiguration();
     RegistrationManager reg;
     LedgerStorage ledgerStorage;
@@ -106,7 +106,16 @@ public class BookieImplTest {
         else {
             indexDirs = generateIndexDirs(3);
         }
-        ledgerDirsManager = getCorrespondingLedgerDirsManager(bundle.ledgerDirsManagerType, conf, indexDirs, diskChecker);
+        File[] ledgerDirsFiles = new File[3];
+        for (int i = 0; i < ledgerDirsFiles.length; i++) {
+            if (bundle.ledgDirs == VALID)
+                ledgerDirsFiles[i] =  new File(ledgDirs[i]);
+            else if (bundle.ledgDirs == EMPTY) {
+                ledgerDirsFiles = new File[] {};
+                break;
+            }
+        }
+        ledgerDirsManager = getCorrespondingLedgerDirsManager(bundle.ledgerDirsManagerType, conf, ledgerDirsFiles, diskChecker);
         indexDirsManager = getCorrespondingLedgerDirsManager(bundle.indexDirsManager, conf, indexDirs, diskChecker);
         statsLogger = bundle.statsLogger;
         byteBufAllocator = bundle.byteBufAllocator;

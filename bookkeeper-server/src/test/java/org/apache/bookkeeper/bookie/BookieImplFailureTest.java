@@ -5,7 +5,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import org.apache.bookkeeper.bookie.util.TestBookieImplUtil;
-import org.apache.bookkeeper.bookie.util.testtypes.*;
+import org.apache.bookkeeper.bookie.util.testtypes.InputBundle;
+import org.apache.bookkeeper.bookie.util.testtypes.InvalidDiskChecker;
+import org.apache.bookkeeper.bookie.util.testtypes.InvalidRegistrationManager;
+import org.apache.bookkeeper.bookie.util.testtypes.InvalidStatsLogger;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
 import org.apache.bookkeeper.discover.RegistrationManager;
@@ -19,8 +22,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,15 +37,14 @@ import static org.apache.bookkeeper.bookie.BookieImplTest.generateIndexDirs;
 import static org.apache.bookkeeper.bookie.BookieImplTest.getCorrespondingLedgerDirsManager;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.INVALID;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.NULL;
-import static org.junit.Assert.*;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.*;
+import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
 public class BookieImplFailureTest {
 
     private static final List<File> dirs = new ArrayList<>();
     private final String LEDGER_STRING = "ledger";
-    private final int flushInterval = 1000;
     private final InputBundle bundle;
     ServerConfiguration conf = new ServerConfiguration();
     RegistrationManager reg;
@@ -77,12 +77,18 @@ public class BookieImplFailureTest {
 
         }
         String[] ledgDirs;
+        File[] ledgerDirsFiles = new File[0];
         if (bundle.ledgDirs == TestBookieImplUtil.DataType.EMPTY)
             ledgDirs = new String[]{};
         else if (bundle.ledgDirs == TestBookieImplUtil.DataType.NULL)
             ledgDirs = null;
         else {
             ledgDirs = generateTempDirs(3, LEDGER_STRING);
+            ledgerDirsFiles = new File[3];
+            for (int i = 0; i < ledgDirs.length; i++) {
+                    ledgerDirsFiles[i] =  new File(ledgDirs[i]);
+
+            }
             if (bundle.ledgDirs == TestBookieImplUtil.DataType.INVALID)
                 ledgDirs[0] = "notAPath\0"; //Invalidiamo uno dei path
 
@@ -98,8 +104,10 @@ public class BookieImplFailureTest {
         diskChecker = bundle.diskChecker;
         indexDirs = generateIndexDirs(3);
 
-        ledgerDirsManager = getCorrespondingLedgerDirsManager(bundle.ledgerDirsManagerType, conf, indexDirs, diskChecker);
+
+        ledgerDirsManager = getCorrespondingLedgerDirsManager(bundle.ledgerDirsManagerType, conf, ledgerDirsFiles, diskChecker);
         indexDirsManager = getCorrespondingLedgerDirsManager(bundle.indexDirsManager, conf, indexDirs, diskChecker);
+
         if (bundle.indexDirs == INVALID) {
             indexDirs[0] = new File("notAPath\0");
         }
@@ -111,6 +119,8 @@ public class BookieImplFailureTest {
         statsLogger = bundle.statsLogger;
         byteBufAllocator = bundle.byteBufAllocator;
         bookieServiceInfo = bundle.bookieServiceInfoSupplier;
+
+
 
 
     }
