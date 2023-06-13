@@ -62,7 +62,7 @@ public class InputBundle {
     public static InputBundle getDefault() throws IOException   {
 
         return new InputBundle(
-                0,
+                1,
                 DataType.VALID,
                 DataType.VALID,
                 1000,
