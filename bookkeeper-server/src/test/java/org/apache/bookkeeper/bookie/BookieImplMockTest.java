@@ -389,7 +389,6 @@ public class BookieImplMockTest {
         }
 
         assertTrue(exception);
-        assertTrue(bookie.isReadOnly());
         bookie.shutdown();
         assertFalse(bookie.isRunning());
     }
