@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType;
@@ -345,6 +346,14 @@ public class BookieImplTest {
         }
         dirs.clear();
         Mockito.clearAllCaches();
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (Exception e) {
+            //skip
+        }
 
     }
 

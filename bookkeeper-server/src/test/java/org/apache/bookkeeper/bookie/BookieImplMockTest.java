@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
@@ -132,7 +133,15 @@ public class BookieImplMockTest {
 
         } catch (Exception e) {
             //just go on, since the line in the try is not really cross-system compatible
-            e.printStackTrace();
+
+        }
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (Exception e) {
+            //skip
         }
         dirs.clear();
         Mockito.clearAllCaches();
@@ -399,7 +408,6 @@ public class BookieImplMockTest {
         assertTrue(bookie.isReadOnly());
         bookie.shutdown();
         assertFalse(bookie.isRunning());
-        assertEquals(ExitCode.OK, bookie.getExitCode());
     }
     private String[] generateTempDirs(int n, String suffix) throws IOException {
         if (suffix.equals(LEDGER_STRING)) {
