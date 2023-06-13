@@ -15,6 +15,7 @@ import org.apache.bookkeeper.util.DiskChecker;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -24,9 +25,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +42,7 @@ public class BookieImplMockTest {
 
 
     private static final List<File> dirs = new ArrayList<>();
-    private static BookieImpl bookie;
+    private static BookieImpl bookie = null;
     private final String LEDGER_STRING = "ledger";
     private final InputBundle bundle = InputBundle.getDefault();
     ServerConfiguration conf = new ServerConfiguration();
@@ -95,20 +98,34 @@ public class BookieImplMockTest {
 
     private static File[] generateIndexDirs(int n) throws IOException {
         File[] indexFiles = new File[n];
+        Random random = new Random();
         for (int i = 0; i < n; i++) {
-            indexFiles[i] = Files.createTempDirectory("index" + i).toFile();
+            String dirPath = "./target/tempDirs/" + "index" + i + random.nextInt();
+            File directory = new File(dirPath);
+            directory.mkdir();
+            indexFiles[i] = directory;
             dirs.add(indexFiles[i]);
         }
 
         return indexFiles;
     }
+    @Before
+    public void before() {
+        if (bookie != null && bookie.isRunning()) {
+            bookie.shutdown();
+            assertFalse(bookie.isRunning());
+
+        }
+    }
 
     @AfterClass
     public static void afterClass() {
 
-        bookie.shutdown();
-        assertFalse(bookie.isRunning());
-        Mockito.clearAllCaches();
+        if (bookie != null && bookie.isRunning()) {
+            bookie.shutdown();
+            assertFalse(bookie.isRunning());
+
+        }
 
     }
 
@@ -378,12 +395,15 @@ public class BookieImplMockTest {
             ledgerFiles = new File[n];
         }
         String[] ret = new String[n];
+        Random random = new Random();
         for (int i = 0; i < n; i++) {
-            Path path = Files.createTempDirectory(suffix + i);
-            dirs.add(path.toFile());
-            ret[i] = path.toFile().getPath();
+            String dirPath = "./target/tempDirs/" + suffix + i + random.nextInt();
+            File directory = new File(dirPath);
+            directory.mkdir();
+            dirs.add(directory);
+            ret[i] = directory.getPath();
             if (suffix.equals(LEDGER_STRING)) {
-                ledgerFiles[i] = path.toFile();
+                ledgerFiles[i] = directory;
             }
         }
 

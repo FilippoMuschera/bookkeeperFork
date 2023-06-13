@@ -27,10 +27,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static org.apache.bookkeeper.bookie.BookieImplTest.generateIndexDirs;
@@ -270,12 +268,15 @@ public class BookieImplFailureTest {
             ledgerFiles = new File[n];
         }
         String[] ret = new String[n];
+        Random random = new Random();
         for (int i = 0; i < n; i++) {
-            Path path = Files.createTempDirectory(suffix + i);
-            dirs.add(path.toFile());
-            ret[i] = path.toFile().getPath();
+            String dirPath = "./target/tempDirs/" + suffix + i + random.nextInt();
+            File directory = new File(dirPath);
+            directory.mkdir();
+            dirs.add(directory);
+            ret[i] = directory.getPath();
             if (suffix.equals(LEDGER_STRING)) {
-                ledgerFiles[i] = path.toFile();
+                ledgerFiles[i] = directory;
             }
         }
 

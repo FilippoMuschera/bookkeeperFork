@@ -14,6 +14,7 @@ import org.apache.bookkeeper.meta.NullMetadataBookieDriver;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.DiskChecker;
+import org.apache.bookkeeper.util.MathUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -27,10 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -319,12 +318,15 @@ public class BookieImplTest {
             ledgerFiles = new File[n];
         }
         String[] ret = new String[n];
+        Random random = new Random();
         for (int i = 0; i < n; i++) {
-            Path path = Files.createTempDirectory(suffix + i);
-            dirs.add(path.toFile());
-            ret[i] = path.toFile().getPath();
+            String dirPath = "./target/tempDirs/" + suffix + i + random.nextInt();
+            File directory = new File(dirPath);
+            directory.mkdir();
+            dirs.add(directory);
+            ret[i] = directory.getPath();
             if (suffix.equals(LEDGER_STRING)) {
-                ledgerFiles[i] = path.toFile();
+                ledgerFiles[i] = directory;
             }
         }
 
