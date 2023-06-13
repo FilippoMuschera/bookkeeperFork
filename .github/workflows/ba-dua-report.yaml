@@ -18,9 +18,9 @@ jobs:
       uses: actions/setup-java@v2
       with:
         java-version: 8
-        distribution: 'adopt'
+        distribution: 'oracle'
     - name: Build and Test with Maven
-      run: mvn -T 6 clean verify -P badua-profile -e -X
+      run: mvn -T 1.5C clean verify -P badua-profile -e -X
     - name: Archive badua coverage results
       uses: actions/upload-artifact@v3
       with:
