@@ -35,7 +35,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -T 1C -B verify -P jacoco-profile org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=FilippoMuschera_bookkeeperTestForCI
+        run: mvn -B -P jacoco-profile verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=FilippoMuschera_bookkeeperTestForCI
 
       - name: Archive jacoco coverage results
         uses: actions/upload-artifact@v3

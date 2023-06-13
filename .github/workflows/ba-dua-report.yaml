@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
 
 
     steps:
@@ -20,7 +20,7 @@ jobs:
         java-version: 8
         distribution: 'adopt'
     - name: Build and Test with Maven
-      run: mvn -T 1.5C clean verify -P badua-profile -e -X
+      run: mvn -P badua-profile clean verify
     - name: Archive badua coverage results
       uses: actions/upload-artifact@v3
       with:
