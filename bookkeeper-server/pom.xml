@@ -332,7 +332,9 @@
             <param>org.apache.bookkeeper.bookie.Journal</param>
           </targetClasses>
           <targetTests>
-            <param>org.apache.bookkeeper.bookie.*</param>
+            <param>org.apache.bookkeeper.bookie.BookieImpl*Test</param>
+            <param>org.apache.bookkeeper.bookie.Format*Test</param>
+            <param>org.apache.bookkeeper.bookie.Journal*Test</param>
           </targetTests>
         </configuration>
       </plugin>

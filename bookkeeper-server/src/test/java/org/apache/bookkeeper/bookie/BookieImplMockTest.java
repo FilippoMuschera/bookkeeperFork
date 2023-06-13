@@ -104,46 +104,10 @@ public class BookieImplMockTest {
     }
 
     @AfterClass
-    public static void cleanUp() {
+    public static void afterClass() {
 
         bookie.shutdown();
         assertFalse(bookie.isRunning());
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        for (File dir : dirs) {
-
-            executorService.submit(() -> {
-                try {
-                    FileUtils.deleteDirectory(dir);
-                } catch (IOException e) {
-                    //just go on
-                }
-
-            });
-
-        }
-        try {
-            executorService.submit(() -> {
-                try {
-                    FileUtils.deleteDirectory(new File("/tmp/bk-txn"));
-                } catch (IOException e) {
-                    //just go on
-                }
-
-            });
-
-        } catch (Exception e) {
-            //just go on, since the line in the try is not really cross-system compatible
-
-        }
-        executorService.shutdown();
-        try {
-            if (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
-                executorService.shutdownNow();
-            }
-        } catch (Exception e) {
-            //skip
-        }
-        dirs.clear();
         Mockito.clearAllCaches();
 
     }

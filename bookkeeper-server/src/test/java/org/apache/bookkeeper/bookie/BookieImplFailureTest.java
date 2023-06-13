@@ -285,21 +285,11 @@ public class BookieImplFailureTest {
 
 
     @After
-    public void after() throws IOException {
+    public void after() {
 
-        for (File dir : dirs) {
-            FileUtils.deleteDirectory(dir);
-            assertFalse(Files.exists(dir.toPath()));
+        if (bookieImpl != null && bookieImpl.isRunning())
+            bookieImpl.shutdown();
 
-        }
-        try {
-            FileUtils.deleteDirectory(new File("/tmp/bk-txn"));
-
-        } catch (Exception e) {
-            //just go on, since the line in the try is not really cross-system compatible
-            e.printStackTrace();
-        }
-        dirs.clear();
         Mockito.clearAllCaches();
 
     }
