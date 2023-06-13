@@ -112,9 +112,7 @@ public class BookieImplMockTest {
     @Before
     public void before() {
         if (bookie != null && bookie.isRunning()) {
-            bookie.shutdown();
-            assertFalse(bookie.isRunning());
-
+            bookie.triggerBookieShutdown(ExitCode.OK);
         }
     }
 
