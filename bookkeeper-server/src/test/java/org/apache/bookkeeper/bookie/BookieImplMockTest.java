@@ -1,17 +1,20 @@
 package org.apache.bookkeeper.bookie;
 
-//Tests to extend coverage of BookieImpl.java with the help of mocks
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import org.apache.bookkeeper.bookie.util.testtypes.InputBundle;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.discover.BookieServiceInfo;
 import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.meta.NullMetadataBookieDriver;
+import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.DiskChecker;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -24,6 +27,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
@@ -98,24 +103,43 @@ public class BookieImplMockTest {
     }
 
     @AfterClass
-    public static void cleanUp() throws IOException {
+    public static void cleanUp() {
 
         bookie.shutdown();
         assertFalse(bookie.isRunning());
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
         for (File dir : dirs) {
-            FileUtils.deleteDirectory(dir);
+
+            executorService.submit(() -> {
+                try {
+                    FileUtils.deleteDirectory(dir);
+                } catch (IOException e) {
+                    //just go on
+                }
+
+            });
 
         }
         try {
-            FileUtils.deleteDirectory(new File("/tmp/bk-txn"));
+            executorService.submit(() -> {
+                try {
+                    FileUtils.deleteDirectory(new File("/tmp/bk-txn"));
+                } catch (IOException e) {
+                    //just go on
+                }
+
+            });
 
         } catch (Exception e) {
             //just go on, since the line in the try is not really cross-system compatible
             e.printStackTrace();
         }
         dirs.clear();
+        Mockito.clearAllCaches();
 
     }
+
+    //Tests to extend coverage of BookieImpl.java with the help of mocks
 
     @Test
     public void readJournalFailInStart() throws IOException, BookieException, InterruptedException {
@@ -286,6 +310,97 @@ public class BookieImplMockTest {
 
     }
 
+
+    @Test
+    public void simpleRecoveryAddEntryTest() throws IOException, InterruptedException, BookieException {
+
+        bookie = new BookieImpl(
+                conf,
+                reg,
+                ledgerStorage,
+                diskChecker,
+                ledgerDirsManager,
+                indexDirsManager,
+                statsLogger,
+                byteBufAllocator,
+                bookieServiceInfo
+        );
+
+        bookie.start();
+
+        ByteBuf buffer = Unpooled.buffer();
+        long ledgerId = 1;
+        long entry = 0;
+        long lastConf = -1;
+        buffer.writeLong(ledgerId);
+        buffer.writeLong(entry);
+        buffer.writeLong(lastConf);
+        String expectedCtx = "foo";
+
+        try {
+            bookie.recoveryAddEntry(buffer, (int rc, long ledgerId1, long entryId1,
+                                            BookieId addr, Object ctx) -> {
+                assertSame(expectedCtx, ctx);
+                Assert.assertEquals(ledgerId, ledgerId1);
+                Assert.assertEquals(entry, entryId1);
+            }, "foo", "test".getBytes());
+        } catch (Exception e) {
+            fail("No exception should be thrown here");
+        }
+        bookie.shutdown();
+        assertFalse(bookie.isRunning());
+        assertEquals(ExitCode.OK, bookie.getExitCode());
+
+
+
+    }
+
+
+    @Test
+    public void recoveryAddEntryWithMockTest() throws InterruptedException, BookieException, IOException {
+        bookie = new BookieImpl(
+                conf,
+                reg,
+                ledgerStorage,
+                diskChecker,
+                ledgerDirsManager,
+                indexDirsManager,
+                statsLogger,
+                byteBufAllocator,
+                bookieServiceInfo
+        );
+
+        bookie.start();
+
+        ByteBuf buffer = Unpooled.buffer();
+        long ledgerId = 1;
+        long entry = 0;
+        long lastConf = -1;
+        buffer.writeLong(ledgerId);
+        buffer.writeLong(entry);
+        buffer.writeLong(lastConf);
+        String expectedCtx = "foo";
+        BookieImpl mockedBookie = Mockito.spy(bookie);
+        Mockito.when(mockedBookie.getLedgerForEntry(buffer, "mock".getBytes())).thenThrow(new LedgerDirsManager.NoWritableLedgerDirException("Mocked exception"));
+        boolean exception = false;
+
+        try {
+            mockedBookie.recoveryAddEntry(buffer, (int rc, long ledgerId1, long entryId1,
+                                             BookieId addr, Object ctx) -> {
+                assertSame(expectedCtx, ctx);
+                Assert.assertEquals(ledgerId, ledgerId1);
+                Assert.assertEquals(entry, entryId1);
+            }, "foo", "mock".getBytes());
+        } catch (IOException e) {
+            exception = true;
+        }
+
+        assertTrue(exception);
+        assertTrue(bookie.isReadOnly());
+        bookie.shutdown();
+        assertFalse(bookie.isRunning());
+        assertEquals(ExitCode.OK, bookie.getExitCode());
+    }
     private String[] generateTempDirs(int n, String suffix) throws IOException {
         if (suffix.equals(LEDGER_STRING)) {
             ledgerFiles = new File[n];

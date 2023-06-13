@@ -16,6 +16,7 @@ import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.DiskChecker;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType;
@@ -212,7 +215,7 @@ public class BookieImplTest {
     }
 
     @Test
-    public void noWritableLedgerTest() throws IOException, InterruptedException, BookieException, BKException {
+    public void noWritableLedgerTest() throws IOException, InterruptedException, BookieException {
         ByteBuf buffer = Unpooled.buffer();
         long ledgerId = 1;
         long entry = 0;
@@ -305,16 +308,36 @@ public class BookieImplTest {
     }
 
     @After
-    public void after() throws IOException {
-
+    public void shutDown() {
         bookieImpl.shutdown();
         assertFalse(bookieImpl.isRunning());
+    }
+    @AfterClass
+    public static void cleanAfter() {
+
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
         for (File dir : dirs) {
-            FileUtils.deleteDirectory(dir);
+
+            executorService.submit(() -> {
+                try {
+                    FileUtils.deleteDirectory(dir);
+                } catch (IOException e) {
+                    //just go on
+                }
+
+            });
 
         }
         try {
-            FileUtils.deleteDirectory(new File("/tmp/bk-txn"));
+            executorService.submit(() -> {
+                try {
+                    FileUtils.deleteDirectory(new File("/tmp/bk-txn"));
+                } catch (IOException e) {
+                    //just go on
+                }
+
+            });
 
         } catch (Exception e) {
             //just go on, since the line in the try is not really cross-system compatible
