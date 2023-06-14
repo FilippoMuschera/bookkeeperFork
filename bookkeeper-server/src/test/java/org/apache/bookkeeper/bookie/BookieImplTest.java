@@ -193,7 +193,7 @@ public class BookieImplTest {
     }
 
     @Test
-    public void setUpBookieTest() throws IOException {
+    public void setUpBookieAndBookieIdTest() throws IOException {
 
         //Serie di assert volti a controllare la correttezza del setup del Bookie
 
@@ -207,7 +207,8 @@ public class BookieImplTest {
         List<File> currDirs = new ArrayList<>(Arrays.asList(BookieImpl.getCurrentDirectories(ledgerFiles)));
         for (File ledgerFile : ledgerFiles) assertTrue(currDirs.contains(BookieImpl.getCurrentDirectory(ledgerFile)));
         if (hasBookieId) {
-            assertEquals("localhost:"+conf.getBookiePort(), BookieImpl.getBookieId(conf).toString());
+            BookieId bookieId = BookieImpl.getBookieId(conf);
+            assertEquals("localhost:"+conf.getBookiePort(), bookieId.toString());
             hasBookieId = false;
         }
 
