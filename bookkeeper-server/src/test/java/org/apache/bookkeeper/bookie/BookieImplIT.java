@@ -31,7 +31,6 @@ public class BookieImplIT {
     private static final List<File> dirs = new ArrayList<>();
 
     private InputBundle bundle = InputBundle.getDefault();
-    private final int flushInterval = 1000;
     ServerConfiguration conf = new ServerConfiguration();
     RegistrationManager reg;
     LedgerStorage ledgerStorage;
@@ -184,7 +183,7 @@ public class BookieImplIT {
     }
 
 
-    private static File[] generateIndexDirs(int n) throws IOException {
+    private static File[] generateIndexDirs(int n) {
         File[] indexFiles = new File[n];
         Random random = new Random();
         for (int i = 0; i < n; i++) {
@@ -198,7 +197,7 @@ public class BookieImplIT {
         return indexFiles;
     }
 
-    private String[] generateTempDirs(int n, String suffix) throws IOException {
+    private String[] generateTempDirs(int n, String suffix) {
         if (suffix.equals(LEDGER_STRING)) {
             ledgerFiles = new File[n];
         }

@@ -8,14 +8,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.net.*;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.getInterfaceName;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue;
-import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType;
+import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.*;
 
 @RunWith(Parameterized.class)
 public class BookieImplAddressTest {
@@ -23,9 +22,9 @@ public class BookieImplAddressTest {
     private static int testIndex = 0;
 
     private BookieSocketAddress bookieSocketAddress = null;
-    private ServerConfiguration config;
+    private final ServerConfiguration config;
 
-    private TestBookieImplUtil.ExpectedValue expectedValue;
+    private final TestBookieImplUtil.ExpectedValue expectedValue;
 
     private final String HOST_NAME = InetAddress.getLocalHost().getCanonicalHostName();
 
@@ -95,10 +94,10 @@ public class BookieImplAddressTest {
 
         } catch (UnknownHostException e) {
             actualValue = ExpectedValue.UH_EXCEPTION;
-            System.out.println(e.toString());
+            System.out.println(e);
         } catch (IllegalArgumentException e) {
             actualValue = ExpectedValue.IA_EXCEPTION;
-            System.out.println(e.toString());
+            System.out.println(e);
 
         }
         Assert.assertEquals("Test #" + testIndex + " failed (index starts from 1)" ,expectedValue, actualValue);

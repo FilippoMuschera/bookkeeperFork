@@ -12,7 +12,6 @@ import org.apache.bookkeeper.meta.NullMetadataBookieDriver;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.DiskChecker;
-import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -23,16 +22,10 @@ import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
@@ -63,7 +56,7 @@ public class BookieImplMockTest {
         String[] jourDirs = generateTempDirs(3, "journal");
 
         String[] ledgDirs;
-        File[] ledgerDirsFiles = new File[0];
+        File[] ledgerDirsFiles;
 
         ledgDirs = generateTempDirs(3, LEDGER_STRING);
         ledgerDirsFiles = new File[3];

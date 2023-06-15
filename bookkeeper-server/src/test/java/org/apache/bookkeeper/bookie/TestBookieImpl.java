@@ -40,22 +40,6 @@ public class TestBookieImpl extends BookieImpl {
         this.resources = resources;
     }
 
-    public static ReadOnlyBookie buildReadOnly(Resources resources) throws Exception {
-        return new ReadOnlyBookie(resources.conf,
-                resources.registrationManager,
-                resources.storage,
-                resources.diskChecker,
-                resources.ledgerDirsManager,
-                resources.indexDirsManager,
-                NullStatsLogger.INSTANCE,
-                UnpooledByteBufAllocator.DEFAULT,
-                new SimpleBookieServiceInfoProvider(resources.conf));
-    }
-
-    public static ReadOnlyBookie buildReadOnly(ServerConfiguration conf) throws Exception {
-        return buildReadOnly(new ResourceBuilder(conf).build());
-    }
-
     @Override
     int shutdown(int exitCode) {
         int ret = super.shutdown(exitCode);
@@ -127,16 +111,6 @@ public class TestBookieImpl extends BookieImpl {
 
         public ResourceBuilder(ServerConfiguration conf) {
             this.conf = conf;
-        }
-
-        public ResourceBuilder withMetadataDriver(MetadataBookieDriver driver) {
-            this.metadataBookieDriver = driver;
-            return this;
-        }
-
-        public ResourceBuilder withRegistrationManager(RegistrationManager registrationManager) {
-            this.registrationManager = registrationManager;
-            return this;
         }
 
         Resources build() throws Exception {

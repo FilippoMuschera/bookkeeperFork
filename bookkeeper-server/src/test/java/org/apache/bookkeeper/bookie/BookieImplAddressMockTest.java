@@ -1,7 +1,7 @@
 package org.apache.bookkeeper.bookie;
 
-import org.apache.bookkeeper.bookie.util.TestBookieImplUtil;
 import org.apache.bookkeeper.bookie.util.TestBKConfiguration;
+import org.apache.bookkeeper.bookie.util.TestBookieImplUtil;
 import org.apache.bookkeeper.bookie.util.testtypes.CustomBookieSocketAddress;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.net.BookieSocketAddress;
@@ -21,7 +21,6 @@ import java.net.UnknownHostException;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.getInterfaceName;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.powermock.api.mockito.PowerMockito.spy;
 
 @PrepareForTest({DNS.class, BookieImpl.class})
 @RunWith(PowerMockRunner.class)

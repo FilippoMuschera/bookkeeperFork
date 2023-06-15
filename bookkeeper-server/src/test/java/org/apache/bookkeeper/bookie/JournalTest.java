@@ -113,7 +113,7 @@ public class JournalTest {
     private static class DummyJournalScan implements Journal.JournalScanner {
 
         @Override
-        public void process(int journalVersion, long offset, ByteBuffer entry) throws IOException {
+        public void process(int journalVersion, long offset, ByteBuffer entry) {
             //non fa nulla, metodo dummy
 
         }

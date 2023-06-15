@@ -2,18 +2,17 @@
 
 package org.apache.bookkeeper.bookie.util;
 
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Collections;
-import java.util.Enumeration;
-
 import org.apache.bookkeeper.bookie.storage.ldb.DbLedgerStorage;
 import org.apache.bookkeeper.common.allocator.PoolingPolicy;
-import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.util.PortManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Collections;
+import java.util.Enumeration;
 
 /**
  * Test the BK configuration object.
@@ -43,9 +42,6 @@ public class TestBKConfiguration {
         confReturn.setAllocatorPoolingPolicy(PoolingPolicy.UnpooledHeap);
         confReturn.setProperty(DbLedgerStorage.WRITE_CACHE_MAX_SIZE_MB, 4);
         confReturn.setProperty(DbLedgerStorage.READ_AHEAD_CACHE_MAX_SIZE_MB, 4);
-        /**
-         * if testcase has zk error,just try 0 time for fast running
-         */
         confReturn.setZkRetryBackoffMaxRetries(0);
 
         //confReturn.setMetadataServiceUri("ServiceUri");
@@ -77,13 +73,4 @@ public class TestBKConfiguration {
         return serverConf;
     }
 
-    public static ClientConfiguration newClientConfiguration() {
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-        clientConfiguration.setTLSEnabledProtocols("TLSv1.2,TLSv1.1");
-        /**
-         * if testcase has zk error,just try 0 time for fast running
-         */
-        clientConfiguration.setZkRetryBackoffMaxRetries(0);
-        return clientConfiguration;
-    }
 }

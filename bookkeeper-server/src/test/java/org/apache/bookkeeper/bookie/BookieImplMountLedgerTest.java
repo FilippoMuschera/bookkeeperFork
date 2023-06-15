@@ -80,7 +80,7 @@ public class BookieImplMountLedgerTest {
             ledgerStorage = LedgerStorageFactory.createLedgerStorage(ls);
 
         } catch (IOException e) {
-            System.err.println("Impossibile istanziare il ledger di tipo " + type.toString() + " con la stringa " + ls);
+            System.err.println("Impossibile istanziare il ledger di tipo " + type + " con la stringa " + ls);
             e.printStackTrace();
         }
 

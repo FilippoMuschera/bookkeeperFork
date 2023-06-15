@@ -16,7 +16,6 @@ import org.apache.bookkeeper.meta.NullMetadataBookieDriver;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.DiskChecker;
-import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,9 +24,6 @@ import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -263,7 +259,7 @@ public class BookieImplFailureTest {
 
     }
 
-    private String[] generateTempDirs(int n, String suffix) throws IOException {
+    private String[] generateTempDirs(int n, String suffix) {
         if (suffix.equals(LEDGER_STRING)) {
             ledgerFiles = new File[n];
         }
