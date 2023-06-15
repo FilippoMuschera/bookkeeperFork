@@ -32,7 +32,7 @@ public class JournalTest {
 
 
     @Parameterized.Parameters
-    public static Collection<Object[]> getParams() { //TODO CHECK EXPECET VALUES
+    public static Collection<Object[]> getParams() {
         return Arrays.asList(new Object[][]{
              //journalToScan         //journalPos        //Scanner           //Expected
                 {0,                      -1,          new DummyJournalScan(),     Expected.EXACT_BYTES},
