@@ -18,6 +18,7 @@ import static java.util.Collections.emptyMap;
 public class InvalidLedgerDirsManager extends LedgerDirsManager {
 
     List<File> illegalList = new ArrayList<>();
+    private boolean shouldIThrow = false;
     public InvalidLedgerDirsManager() throws IOException {
         this(TestBKConfiguration.newServerConfiguration(), new File[] {}, new InvalidDiskChecker(0.5f, 0.5f));
         illegalList.add(new File("notAPath\0"));
@@ -26,9 +27,18 @@ public class InvalidLedgerDirsManager extends LedgerDirsManager {
         super(conf, dirs, diskChecker);
     }
 
+    public InvalidLedgerDirsManager(boolean b) throws IOException { //Cotrutttore per fare in modo che getAllLedgerDirs() faccia il throw di un'eccezione
+        //invece che il ritorno di un dato scorretto
+        this();
+        this.shouldIThrow = !b || b; //always true
+    }
+
     @Override
     public List<File> getAllLedgerDirs() {
-        return illegalList;
+        if (shouldIThrow)
+                throw new ArrayIndexOutOfBoundsException("Invalid Ledger Dirs Manager Instance!");
+        else
+                return illegalList;
     }
 
     @Override

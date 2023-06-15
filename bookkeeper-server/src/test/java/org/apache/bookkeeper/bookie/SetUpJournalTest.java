@@ -6,29 +6,19 @@ import io.netty.buffer.UnpooledByteBufAllocator;
 import org.apache.bookkeeper.bookie.util.TestBookieImplUtil;
 import org.apache.bookkeeper.bookie.util.testtypes.InvalidLedgerDirsManager;
 import org.apache.bookkeeper.bookie.util.testtypes.InvalidServerConfig;
-import org.apache.bookkeeper.common.util.affinity.CpuAffinity;
+import org.apache.bookkeeper.bookie.util.testtypes.InvalidStatsLogger;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.DiskChecker;
-import org.apache.commons.io.FileUtils;
-import org.apache.logging.log4j.core.util.SystemMillisClock;
-import org.junit.AfterClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
@@ -48,7 +38,8 @@ public class SetUpJournalTest {
     ByteBufAllocator byteBufAllocator;
     TestBookieImplUtil.ExpectedValue expectedValue;
     File directory;
-    private static Class<? extends Throwable> exceptionInThread;
+
+    public static volatile boolean uncaughtExceptionInThread = false;
 
     @ClassRule
     public static TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -70,11 +61,16 @@ public class SetUpJournalTest {
         return Arrays.asList(new Object[][]{
                 //index //directory //config //ledgDirsManager   //statsLog         //byteBufAlloc              //Expected
                 {-1, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, PASSED},
-//                {0, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, PASSED},
-//                {1, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, PASSED},
+                {0, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, PASSED},
+                {1, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, PASSED},
                 {1, Type.INVALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, IO_EXCEPTION},
                 {1, Type.VALID, Type.INVALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, RE_EXCEPTION},
-                {1, Type.VALID, Type.VALID, Type.INVALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, LEDG_EXCEPTION}
+                {1, Type.VALID, Type.VALID, Type.INVALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, LEDG_EXCEPTION},
+                {1, Type.VALID, Type.VALID, Type.VALID, null, UnpooledByteBufAllocator.DEFAULT, NP_EXCEPTION},
+                {1, Type.VALID, Type.VALID, Type.VALID, new InvalidStatsLogger(), UnpooledByteBufAllocator.DEFAULT, RE_EXCEPTION},
+                {1, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), null, BUFF_EXCEPTION}, //fa crashare tutto il test, non posso neanche sovrascrivere l'uncought handler
+
+
 
 
 
@@ -89,7 +85,11 @@ public class SetUpJournalTest {
         else if (ledgDirManType == Type.VALID) {
             return new LedgerDirsManager(conf, conf.getLedgerDirs(), new DiskChecker(0.99f, 0.98f));
         } else if (ledgDirManType == Type.INVALID) {
-            return new InvalidLedgerDirsManager();
+            return new InvalidLedgerDirsManager(true); //Altrimenti l'errore si vede solo nel LOG. Bug? Probabilmente no,
+            //perchè il metodo sembra pensato così, anche se il messaggio d'errore è molto vago, e appunto, senza guardare il log
+            //passa un po' inosservato. Potrebbe sicuramente esserci un check se è la prima volta o no che quel metodo viene invocato
+            //per capire se bisognerebbe fare il throw di un eccezione o no, o quantomeno per avere un log più chiaro.
+            //"Error doing ... but it's ok if it's the first time opening this journal" dice più o meno il log, che non è chiarissimo.
         }
         return null;
     }
@@ -132,6 +132,7 @@ public class SetUpJournalTest {
     }
 
 
+
     @Test
     public void newJournalTest() throws IOException {
         Exception exceptionRaised = null;
@@ -144,39 +145,68 @@ public class SetUpJournalTest {
                         this.ledgerDirsManager,
                         this.statsLogger,
                         this.byteBufAllocator
-                );
+                ) {
+                    @Override
+                    protected void handleException(Thread t, Throwable e) {
+                        System.out.println("There would have been an uncaught exception in the Journal, but I caught it!");
+                        uncaughtExceptionInThread = true;
+                    }
+                };
+
 
                 journal.start();
                 /*
                  * Non è un modo molto elegante di aspettare che il journal parta ma è necessario per evitare di utilizzare
                  * il journal mentre sta ancora eseguendo la start. Anche gli sviluppatori Apache implementano (seppur con
-                 * un meccanismo più complesso) la wait dell'esecuzione dell'avvio del journal
+                 * un meccanismo più complesso) la wait dell'esecuzione dell'avvio del journal, e in alcune occasioni fanno
+                 * uso direttamente della sleep(...) nei loro test, perciò, anche se è una soluzione sicuramente da migliorare,
+                 * per questioni di tempo viene lasciata in questo modo.
                  */
                 Thread.sleep(500);
 
 
             } catch (Exception e) {
                 exceptionRaised = e;
+                assertFalse(uncaughtExceptionInThread);
             }
 
             if (this.expectedValue == IA_EXCEPTION) {
-                assertTrue(exceptionRaised instanceof RuntimeException);
+                assertTrue(exceptionRaised instanceof IllegalArgumentException);
                 return;
             } else if (this.expectedValue == RE_EXCEPTION) {
                 assertTrue(exceptionRaised instanceof RuntimeException);
                 return;
-            } else {
+
+            }
+            else if (expectedValue == LEDG_EXCEPTION) {
+                assertTrue(exceptionRaised instanceof ArrayIndexOutOfBoundsException);
+                return;
+            } else if (expectedValue == NP_EXCEPTION) {
+                assertTrue(exceptionRaised instanceof NullPointerException);
+                return;
+            } else if (expectedValue == BUFF_EXCEPTION) {
+                /*
+                 In questo caso sfruttiamo l'override dell'exception handler per controllare che il journal sarebbe in
+                 realtà uscito dalla sua esecuzione (il che però avrebbe interrotto il test, da qui la necessità dell'override).
+                 Ci assicuriamo dunque tramite l'assert che l'handler sia stato eseguito.
+                 */
+
+                assertTrue(uncaughtExceptionInThread);
+                return;
+
+
+
+            }
+            //Casi in cui la creazione del Journal non solleva direttamente un'eccezione
+
+            else {
                 if (expectedValue == IO_EXCEPTION) {
                     //Se c'è stata un eccezione IOException interna, voglio vedere che il journal ha interrotto
                     //il suo thread, e che la creazione della sua cartella non è andata a buon fine
                     assertFalse(journal.journalDirectory.canRead() || journal.journalDirectory.canWrite() || journal.journalDirectory.exists());
                     return;
                 }
-                if (expectedValue == LEDG_EXCEPTION) {
-                    journal.getLastLogMark();
-                    //TODO VEDI PER COSA SI USA LE LEDGER DIR E PROVA A FARCI QUALCOSA CHE LA FA CRASHARE
-                    return;
-                }
+
                 assertNull(exceptionRaised);
                 assertEquals(this.directory, journal.getJournalDirectory());
                 assertTrue(journal.running);
@@ -184,6 +214,7 @@ public class SetUpJournalTest {
 
 
 
+                //TODO rivedere queste righe
                  CheckpointSource.Checkpoint cp = journal.newCheckpoint();
                  journal.checkpointComplete(cp, true);
                 System.out.println(journal.journalDirectory.exists());

@@ -53,7 +53,7 @@ public class JournalV5Test {
             fail("There was exception, none was expected while testing journal v5");
         }
         assertEquals(WRITTEN_BYTES_V5, readBytes);
-        //Il "-2" è per rimuovere la entry con i metadati (la prima) e quella con la JournalVersion (l'ultima)
+        //Il "-2" è per rimuovere le entry con i metadati (la prima) e quella con la JournalVersion (l'ultima)
         //E contare quindi solo le entry di cui abbiamo richiesto la scrittura.
         assertEquals(NUM_OF_ENTRIES - 2, NUM_OF_ENTRIES_ON_JOURNAL);
         System.out.println(NUM_OF_ENTRIES + ", " + WRITTEN_BYTES_V5);
