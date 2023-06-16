@@ -1,4 +1,4 @@
-name: Ba-dua Report
+name: Pit-report Report
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
           java-version: 8
           distribution: 'adopt'
       - name: generate pit mutation report
-        run: mvn clean test-compile org.pitest:pitest-maven:mutationCoverage -pl bookkeeper-server -am
+        run: mvn clean -Xmx2g test-compile org.pitest:pitest-maven:mutationCoverage -pl bookkeeper-server -am
       - name: Archive PIT mutation testing results
         uses: actions/upload-artifact@v3
         with:
