@@ -1,10 +1,7 @@
 package org.apache.bookkeeper.bookie;
 
 
-import io.netty.buffer.AbstractByteBufAllocator;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.*;
 import org.apache.bookkeeper.bookie.util.TestBookieImplUtil;
 import org.apache.bookkeeper.bookie.util.testtypes.InvalidLedgerDirsManager;
 import org.apache.bookkeeper.bookie.util.testtypes.InvalidServerConfig;
@@ -26,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -261,6 +259,35 @@ public class SetUpJournalTest {
             assertEquals(config.getMaxJournalSizeMB() * 1024 * 1024, journal.maxJournalSize);
             assertTrue(journal.getJournalStats().getJournalMemoryMaxStats().getDefaultValue() >= journal.getMemoryUsage());
 
+            /*
+             * Ora testiamo la funzionalità del nostro Journal per aggiungere una log entry, tramite il metodo logAddEntry().
+             * Quello che ci aspettiamo è un esecuzione che non sollevi eccezioni, una scan Journal che riesca a fare lo scan anche
+             * del nuovo file di log senza problemi ( = senza eccezioni), e poi più in basso, dopo aver testato anche i
+             * checkpoint, controlleremo che il file di log qui creato venga correttamente letto anche dal meccanismo di
+             * checkpoint del journal.
+             */
+
+            CountDownLatch latch = new CountDownLatch(1); //semaforo sostanzialmente
+            ByteBuf byteBuf = Unpooled.buffer(512);
+            byteBuf.writeLong(1); //ledgerID
+            byteBuf.writeLong(2); //entryId
+
+            try {
+
+                journal.logAddEntry(byteBuf, false, (rc, ledgerId1, entryId1, addr, ctx) -> latch.countDown(), "foo");
+
+                latch.await(); //aspettiamo che la addEntry abbiamo finito, perchè la callBack diminuisce di 1 il latch, facendolo arrivare a 0
+
+                //ora lanciamo la scan journal per controllare che non trovi record corrotti, per verificare che l'esecuzione sia andata
+                //a buon fine
+                journal.scanJournal(journal.getId(), 0, (journalVersion, offset, entry) -> {
+                    //dummy
+                });
+            } catch (Exception e) {
+                fail("Exception while adding a log entry, and there shouldn't have been one!");
+                e.printStackTrace();
+            }
+
 
             /*
              * Per testare i checkpoint, ci poniamo nella situazione in cui ci siano 3 file di log del journal all'interno
@@ -286,13 +313,15 @@ public class SetUpJournalTest {
             for (int i = 0; i < n; i++) {
                 File dir = config.getJournalDirs()[0];
 
-                //il +i serve ad essere assolutamente certi che per quanto l'esecuzione possa essere veloce, i due file
+                //il +i serve a essere assolutamente certi che per quanto l'esecuzione possa essere veloce, i due file
                 //avranno un nome diverso.
                 File newFile = new File(dir.getPath(), Long.toHexString(System.currentTimeMillis() + i) + ".txn");
                 assertTrue(newFile.createNewFile());
             }
-            assertEquals(1 + n, Journal.listJournalIds(config.getJournalDirs()[0], null).size()); //1 file che c'è di "default", più
-            //gli n che aggiungo al ciclo for sopra
+            //n li ho aggiunti manualmente, uno viene generato al momento della creazione del Journal e l'altro viene
+            //generato tramite il test che usa la logAddEntry eseguita sopra (in questo modo controlliamo ulteriormente
+            //il fatto che la logAddEntry sia andata a buon fine e abbia creato un file di log)
+            assertEquals(2 + n, Journal.listJournalIds(config.getJournalDirs()[0], null).size());
 
             //2*currentTime per assicurarci che il checkpoint sia successivo alla creazione dei file del ciclo for
             //l'epoch moltiplicata per due cade circa nel 2076 quindi sembra un margine più che sufficiente :)
@@ -313,6 +342,9 @@ public class SetUpJournalTest {
              * > 1, e quindi l'assert fallirebbe comunque.
              */
             assertEquals(1, Objects.requireNonNull(journal.getJournalDirectory().listFiles()).length);
+
+            //Controlliamo anche che, chi ha superato tutti questi test, lo dovesse effettivamente fare
+            assertEquals(this.expectedValue, PASSED);
 
             journal.shutdown();
 
