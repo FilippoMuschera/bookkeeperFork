@@ -25,10 +25,10 @@ public class InvalidLedgerDirsManager extends LedgerDirsManager {
         super(conf, dirs, diskChecker);
     }
 
-    public InvalidLedgerDirsManager(boolean b) throws IOException { //Cotrutttore per fare in modo che getAllLedgerDirs() faccia il throw di un'eccezione
+    public InvalidLedgerDirsManager(boolean b) throws IOException { //Costruttore per fare in modo che getAllLedgerDirs() faccia il throw di un'eccezione
         //invece che il ritorno di un dato scorretto
         this();
-        this.shouldIThrow = !b || b; //always true
+        this.shouldIThrow = b;
     }
 
     @Override
