@@ -19,8 +19,10 @@ jobs:
         with:
           java-version: 8
           distribution: 'adopt'
+      - name: set memory
+        run: export MAVEN_OPTS="-Xmx2g"
       - name: generate pit mutation report
-        run: mvn clean -Xmx2g test-compile org.pitest:pitest-maven:mutationCoverage -pl bookkeeper-server -am
+        run: mvn clean -B -q test-compile org.pitest:pitest-maven:mutationCoverage -pl bookkeeper-server -am
       - name: Archive PIT mutation testing results
         uses: actions/upload-artifact@v3
         with:
