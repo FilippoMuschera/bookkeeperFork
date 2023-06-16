@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -276,7 +277,11 @@ public class SetUpJournalTest {
 
                 journal.logAddEntry(byteBuf, false, (rc, ledgerId1, entryId1, addr, ctx) -> latch.countDown(), "foo");
 
-                latch.await(); //aspettiamo che la addEntry abbiamo finito, perchè la callBack diminuisce di 1 il latch, facendolo arrivare a 0
+                //aspettiamo che la addEntry abbiamo finito, perchè la callBack diminuisce di 1 il latch, facendolo arrivare a 0
+                //Usiamo il latch con un tempo limite in modo da uccidere le mutazioni di PIT che altrimenti verrebbero solamente segnate
+                //con TIMED_OUT, poichè chiaramente, se la mutazione interessa la addEntry, il latch.countDown() non viene mai
+                //eseguito, e il test rimane bloccato a questa riga.
+                assertTrue(latch.await(20, TimeUnit.SECONDS));
 
                 //ora lanciamo la scan journal per controllare che non trovi record corrotti, per verificare che l'esecuzione sia andata
                 //a buon fine
