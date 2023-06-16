@@ -3,7 +3,6 @@ package org.apache.bookkeeper.bookie.util.testtypes;
 import org.apache.bookkeeper.util.DiskChecker;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 public class InvalidDiskChecker extends DiskChecker {
@@ -12,22 +11,22 @@ public class InvalidDiskChecker extends DiskChecker {
     }
 
     @Override
-    public long getTotalFreeSpace(List<File> dirs) throws IOException {
+    public long getTotalFreeSpace(List<File> dirs) {
         return -1L;
     }
 
     @Override
-    public long getTotalDiskSpace(List<File> dirs) throws IOException {
+    public long getTotalDiskSpace(List<File> dirs) {
         return -1L;
     }
 
     @Override
-    public float getTotalDiskUsage(List<File> dirs) throws IOException {
+    public float getTotalDiskUsage(List<File> dirs) {
         return -1.1f;
     }
 
     @Override
-    public float checkDir(File dir) throws DiskErrorException, DiskOutOfSpaceException, DiskWarnThresholdException {
+    public float checkDir(File dir) throws DiskErrorException {
         throw new DiskErrorException("Eccezione generata da InvalidRegistrationManager");
     }
 }

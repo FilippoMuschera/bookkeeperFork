@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static java.util.Collections.emptyMap;
-
 public class InvalidLedgerDirsManager extends LedgerDirsManager {
 
     List<File> illegalList = new ArrayList<>();
@@ -47,12 +45,12 @@ public class InvalidLedgerDirsManager extends LedgerDirsManager {
     }
 
     @Override
-    public long getTotalFreeSpace(List<File> dirs) throws IOException {
+    public long getTotalFreeSpace(List<File> dirs) {
         return -1;
     }
 
     @Override
-    public long getTotalDiskSpace(List<File> dirs) throws IOException {
+    public long getTotalDiskSpace(List<File> dirs) {
         return -1;
     }
 
@@ -62,7 +60,7 @@ public class InvalidLedgerDirsManager extends LedgerDirsManager {
     }
 
     @Override
-    public List<File> getWritableLedgerDirs() throws NoWritableLedgerDirException {
+    public List<File> getWritableLedgerDirs() {
         return illegalList;
 
     }
@@ -73,7 +71,7 @@ public class InvalidLedgerDirsManager extends LedgerDirsManager {
     }
 
     @Override
-    public List<File> getWritableLedgerDirsForNewLog() throws NoWritableLedgerDirException {
+    public List<File> getWritableLedgerDirsForNewLog() {
         return illegalList;
 
     }
@@ -91,17 +89,14 @@ public class InvalidLedgerDirsManager extends LedgerDirsManager {
 
     @Override
     public void addToFilledDirs(File dir) {
-        return;
     }
 
     @Override
     public void addToWritableDirs(File dir, boolean underWarnThreshold) {
-        return;
     }
 
     @Override
     public void addLedgerDirsListener(LedgerDirsListener listener) {
-        return;
     }
 
     @Override

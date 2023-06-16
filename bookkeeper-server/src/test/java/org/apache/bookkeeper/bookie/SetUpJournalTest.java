@@ -108,7 +108,7 @@ public class SetUpJournalTest {
                     .setJournalAdaptiveGroupWrites(false)
                     .setMaxBackupJournals(0)
                     .setBusyWaitEnabled(busyWait)
-                    .setJournalFlushWhenQueueEmpty(!busyWait)
+                    .setJournalFlushWhenQueueEmpty(!busyWait) //stesso discorso di busyWait, per semplicità uso una sola variabile
                     .setBookiePort(1);
             busyWait = false; //lo userò solo per la prima run, avevamo un missed branch identificato grazie a Jacoco
             File directory = temporaryFolder.newFolder();
@@ -220,13 +220,16 @@ public class SetUpJournalTest {
 
 
             Long longNum = 7L; //numero qualsiasi, 7 non ha un significato specifico
-            for (int i = 0; i < 2; i++) {
+            int n = 2;
+            for (int i = 0; i < n; i++) {
                 File dir = config.getJournalDirs()[0];
 
                 File newFile = new File(dir.getPath(), longNum + ".txn");
                 assertTrue(newFile.createNewFile());
                 longNum++;
             }
+            assertEquals(1 + n, Journal.listJournalIds(config.getJournalDirs()[0], null).size()); //1 file che c'è di "default", più
+            //gli n che aggiungo al ciclo for sopra
             for (Long id : Journal.listJournalIds(config.getJournalDirs()[0], null)) {
                 journal.setLastLogMark(id, 0);
             }
