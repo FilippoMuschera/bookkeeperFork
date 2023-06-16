@@ -1,0 +1,29 @@
+name: Ba-dua Report
+
+on:
+  push:
+    branches:
+      - master
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45 #pit mutation can be very slow
+
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: 8
+          distribution: 'adopt'
+      - name: generate pit mutation report
+        run: mvn clean test-compile org.pitest:pitest-maven:mutationCoverage -pl bookkeeper-server -am
+      - name: Archive PIT mutation testing results
+        uses: actions/upload-artifact@v3
+        with:
+          name: pit-mutation-report
+          path: bookkeeper-server/target/pit-reports/
+          if-no-files-found: error
