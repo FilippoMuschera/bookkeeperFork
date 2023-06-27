@@ -52,8 +52,6 @@ public class BookieImplFailureTest {
     Supplier<BookieServiceInfo> bookieServiceInfo;
     private BookieImpl bookieImpl;
     private File[] ledgerFiles = new File[]{};
-    private static boolean exceptionInThread = false;
-
 
     public BookieImplFailureTest(InputBundle bundle) throws IOException {
 
@@ -185,10 +183,7 @@ public class BookieImplFailureTest {
                 assertEquals(ExitCode.ZK_REG_FAIL, bookieImpl.getExitCode());
                 return;
             }
-            if (bundle.byteBufAllocator == null) {
-                assertTrue(exceptionInThread);
-                return;
-            }
+
 
             //Test sullo stato del Bookie dopo la creazione delle sua istanza
             assertTrue(bookieImpl.isRunning());
