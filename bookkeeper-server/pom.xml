@@ -325,6 +325,7 @@
         <artifactId>pitest-maven</artifactId>
         <version>1.4.2</version>
         <configuration>
+          <parseSurefireConfig>false</parseSurefireConfig>
           <verbose>false</verbose>
           <threads>8</threads>
           <targetClasses>

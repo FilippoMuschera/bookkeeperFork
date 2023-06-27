@@ -82,8 +82,6 @@ public class BookieImplTest {
         }
         conf.setJournalDirsName(jourDirs);
         conf.setLedgerDirNames(ledgDirs);
-        conf.setDiskUsageWarnThreshold(0.98f);
-        conf.setDiskUsageThreshold(0.99f);
         conf.setFlushInterval(bundle.flushInt);
         conf.setEntryLogPerLedgerEnabled(bundle.logPerLedger);
         if (hasBookieId) {
