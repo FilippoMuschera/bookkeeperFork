@@ -137,7 +137,6 @@ public class BookieImplMockTest {
                 bookieServiceInfo
         );
 
-        //bookie.start();
 
         BookieImpl spiedBookie = Mockito.spy(bookie);
         Mockito.doThrow(new IOException()).when(spiedBookie).readJournal();
