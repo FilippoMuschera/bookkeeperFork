@@ -174,7 +174,7 @@ public class SetUpJournalTest {
                      * Il metodo originale chiama la exit() del processo, dunque quando abbiamo una configurazione del
                      * Journal che porta all'esecuzione di questo handler, il test viene interrotto e fallisce. Facciamo
                      * dunque l'override del metodo per poter eseguire il test in maniera "controllata", senza modificare
-                     * realmente la logica del Journal, dato che con l'invocazione di questo metodo verrebbe semplicemnte arrestato.
+                     * realmente la logica del Journal, dato che con l'invocazione di questo metodo verrebbe semplicemente arrestato.
                      * Procediamo infatti a controllare che l'invocazione dell'handler sia avvenuta, controlliamo che il
                      * tipo di eccezione che ne ha reso necessaria l'esecuzione sia quello che ci aspettavamo, dopodiché
                      * il test termina, provocando la chiusura del journal nell' @After se ancora in esecuzione, come
@@ -268,7 +268,7 @@ public class SetUpJournalTest {
              * checkpoint del journal.
              */
 
-            CountDownLatch latch = new CountDownLatch(1); //semaforo sostanzialmente
+            CountDownLatch latch = new CountDownLatch(1); //è un semaforo sostanzialmente
             ByteBuf byteBuf = Unpooled.buffer(512);
             byteBuf.writeLong(1); //ledgerID
             byteBuf.writeLong(2); //entryId
@@ -280,7 +280,7 @@ public class SetUpJournalTest {
                 //aspettiamo che la addEntry abbiamo finito, perchè la callBack diminuisce di 1 il latch, facendolo arrivare a 0
                 //Usiamo il latch con un tempo limite in modo da uccidere le mutazioni di PIT che altrimenti verrebbero solamente segnate
                 //con TIMED_OUT, poichè chiaramente, se la mutazione interessa la addEntry, il latch.countDown() non viene mai
-                //eseguito, e il test rimane bloccato a questa riga.
+                //eseguito, il test rimane bloccato a questa riga.
                 assertTrue(latch.await(20, TimeUnit.SECONDS));
 
                 //ora lanciamo la scan journal per controllare che non trovi record corrotti, per verificare che l'esecuzione sia andata
