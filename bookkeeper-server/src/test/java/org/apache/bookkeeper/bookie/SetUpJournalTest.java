@@ -67,7 +67,7 @@ public class SetUpJournalTest {
                 {-1, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, PASSED}, //busy wait enabled, no flushOnEmptyQueue
                 {-1, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, PASSED}, //busy wait disabled, flushOnEmptyQueue enabled from here on
                 {0, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, PASSED},
-                {1, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, PASSED},
+                {1, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), PooledByteBufAllocator.DEFAULT, PASSED},
                 {1, Type.INVALID, Type.VALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, IO_EXCEPTION},
                 {1, Type.VALID, Type.INVALID, Type.VALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, RE_EXCEPTION},
                 {1, Type.VALID, Type.VALID, Type.INVALID, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, LEDG_EXCEPTION},
