@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static org.apache.bookkeeper.bookie.util.FolderDeleter.deleteFolder;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.EMPTY;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.VALID;
@@ -308,6 +309,7 @@ public class BookieImplTest {
          */
         shutdownThread.join(3000);
         shutdownThread.interrupt();
+        deleteFolder(new File("./target/tempDirs/"));
     }
 
     private String[] generateTempDirs(int n, String suffix) {

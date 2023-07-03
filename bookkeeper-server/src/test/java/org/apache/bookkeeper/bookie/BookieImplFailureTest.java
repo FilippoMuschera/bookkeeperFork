@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 
 import static org.apache.bookkeeper.bookie.BookieImplTest.generateIndexDirs;
 import static org.apache.bookkeeper.bookie.BookieImplTest.getCorrespondingLedgerDirsManager;
+import static org.apache.bookkeeper.bookie.util.FolderDeleter.deleteFolder;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.INVALID;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.NULL;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.*;
@@ -283,6 +284,7 @@ public class BookieImplFailureTest {
             bookieImpl.shutdown();
 
         Mockito.clearAllCaches();
+        deleteFolder(new File("./target/tempDirs/"));
 
     }
 

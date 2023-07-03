@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import static org.apache.bookkeeper.bookie.util.FolderDeleter.deleteFolder;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.DataType.*;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -107,6 +108,9 @@ public class FormatTest {
     @AfterClass
     public static void after() {
         cleanAll();
+        deleteFolder(new File("./not")); //elimino "/not/a/real/path/"
+        deleteFolder(new File(METADATA_PATH));
+
     }
 
 
