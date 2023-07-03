@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Supplier;
 
+import static org.apache.bookkeeper.bookie.util.FolderDeleter.deleteFolder;
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -117,6 +118,7 @@ public class BookieImplMockTest {
             assertFalse(bookie.isRunning());
 
         }
+        deleteFolder(new File("./target/tempDirs/"));
 
     }
 

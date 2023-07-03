@@ -8,9 +8,11 @@ import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+import java.io.File;
 import java.io.IOException;
 
 import static org.apache.bookkeeper.bookie.FormatTest.*;
+import static org.apache.bookkeeper.bookie.util.FolderDeleter.deleteFolder;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,7 +25,10 @@ public class FormatMockTest {
     public void cleanBefore(){cleanAll();}
 
     @After
-    public void cleanAfter(){cleanAll();}
+    public void cleanAfter(){
+        cleanAll();
+        deleteFolder(new File(METADATA_PATH));
+    }
 
 
     @Test

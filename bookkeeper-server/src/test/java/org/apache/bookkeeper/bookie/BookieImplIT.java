@@ -23,6 +23,7 @@ import java.util.PrimitiveIterator;
 import java.util.Random;
 import java.util.function.Supplier;
 
+import static org.apache.bookkeeper.bookie.util.FolderDeleter.deleteFolder;
 import static org.junit.Assert.*;
 
 public class BookieImplIT {
@@ -228,6 +229,7 @@ public class BookieImplIT {
          */
         shutdownThread.join(3000);
         shutdownThread.interrupt();
+        deleteFolder(new File("./target/tempDirs/"));
     }
 
 }

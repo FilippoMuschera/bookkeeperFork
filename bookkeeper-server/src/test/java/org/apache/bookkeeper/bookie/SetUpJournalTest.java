@@ -26,6 +26,7 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.bookkeeper.bookie.util.FolderDeleter.deleteFolder;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.ExpectedValue.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -394,6 +395,7 @@ public class SetUpJournalTest {
     public void after() {
         if (journal != null && journal.running)
             journal.shutdown();
+        deleteFolder(new File("./current"));
     }
 
 }
