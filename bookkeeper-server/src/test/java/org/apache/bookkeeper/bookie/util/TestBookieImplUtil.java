@@ -55,7 +55,7 @@ public class TestBookieImplUtil {
     }
 
     public enum DataType {
-        NULL, VALID, INVALID, EMPTY
+        NULL, VALID, INVALID, NOT_EX, EMPTY
     }
 
     public static void createDirs() {

@@ -36,6 +36,10 @@ public class FormatTest {
     private String metaDataPath = METADATA_PATH;
     private final boolean force;
     private final boolean expectedOutput;
+    private final boolean noExJournal;
+    private final boolean noExLedg;
+    private final boolean noExIndex;
+
 
     public FormatTest(TestBookieImplUtil.DataType journalDirs, TestBookieImplUtil.DataType ledgerDirs, TestBookieImplUtil.DataType indexDirs,
                       TestBookieImplUtil.DataType metadataPath, boolean force, boolean expected) {
@@ -58,9 +62,16 @@ public class FormatTest {
             this.metaDataPath = INVALID_PATH;
         else if (metadataPath == NULL)
             this.metaDataPath = null;
+        else if (metadataPath == NOT_EX)
+            this.metaDataPath = "not/a/real/path";
 
         this.force = force;
         this.expectedOutput = expected;
+
+        //NOT_EX = Not Existing -> deve esserci un path che è valido, ma il relativo file non deve esistere
+        noExJournal = journalDirs == NOT_EX;
+        noExLedg = ledgerDirs == NOT_EX;
+        noExIndex = indexDirs == NOT_EX;
 
 
     }
@@ -76,7 +87,7 @@ public class FormatTest {
                     {VALID,               VALID,              INVALID,             VALID,         true,           false},
                     {VALID,               VALID,              VALID,               INVALID,       true,           false},
                     {VALID,               VALID,              VALID,               VALID,         false,          false},
-
+                    {NOT_EX,              NOT_EX,             NOT_EX,              NOT_EX,         true,           true}
 
 
 
@@ -103,9 +114,19 @@ public class FormatTest {
     @Test
     public void formatTest() {
         ServerConfiguration configuration = new ServerConfiguration();
-        configuration.setJournalDirsName(journalList == null ? null : extractFileNames(journalList));
-        configuration.setLedgerDirNames(ledgerList == null ? null : extractFileNames(ledgerList));
-        configuration.setIndexDirName(indexList == null ? null : extractFileNames(indexList));
+        String[] journalStrings = journalList == null ? null : extractFileNames(journalList);
+        if (noExJournal)
+            journalStrings[0] = "not/a/real/path"; //se journalStrings è null noExJournal = false -> non rischio NullPointerException
+        configuration.setJournalDirsName(journalStrings);
+        String[] ledgStrings = ledgerList == null ? null : extractFileNames(ledgerList);
+        if (noExLedg)
+            ledgStrings[0] = "not/a/real/path";
+        configuration.setLedgerDirNames(ledgStrings);
+
+        String[] indexStrings = indexList == null ? null : extractFileNames(indexList);
+        if (noExIndex)
+            indexStrings[0] = "not/a/real/path";
+        configuration.setIndexDirName(indexStrings);
         configuration.setGcEntryLogMetadataCachePath(this.metaDataPath);
         boolean output = BookieImpl.format(configuration, false, this.force);
         assertEquals(expectedOutput, output);
