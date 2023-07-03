@@ -78,6 +78,21 @@ public class BookieImplMountLedgerTest {
         }
         try {
             ledgerStorage = LedgerStorageFactory.createLedgerStorage(ls);
+            if (type == LedgerStorageType.INTERLEAVED) { //Il ledger DB non usa i checkpoint
+                ledgerStorage.setCheckpointer(new Checkpointer() {
+                    @Override
+                    public void startCheckpoint(CheckpointSource.Checkpoint checkpoint) {
+                        throw new RuntimeException();
+                    }
+
+                    @Override
+                    public void start() {
+                        throw new RuntimeException();
+
+                    }
+                });
+            }
+
 
         } catch (IOException e) {
             System.err.println("Impossibile istanziare il ledger di tipo " + type + " con la stringa " + ls);
@@ -100,6 +115,11 @@ public class BookieImplMountLedgerTest {
             //e quindi la qualità del test stesso
             assertEquals(0, ls.localConsistencyCheck(java.util.Optional.empty()).size());
             ls.checkpoint(CheckpointSource.Checkpoint.MIN);
+            if (ls instanceof InterleavedLedgerStorage) {
+                InterleavedLedgerStorage ils = (InterleavedLedgerStorage) ls;
+                ils.onRotateEntryLog();
+
+            }
         } catch (IllegalArgumentException e) {
             actualValue = ExpectedValue.ILLEGAL_ARGUMENT;
 
