@@ -327,7 +327,7 @@
         <configuration>
           <parseSurefireConfig>false</parseSurefireConfig>
           <verbose>false</verbose>
-          <threads>8</threads>
+          <threads>1</threads>
           <targetClasses>
             <param>org.apache.bookkeeper.bookie.BookieImpl</param>
             <param>org.apache.bookkeeper.bookie.Journal</param>
