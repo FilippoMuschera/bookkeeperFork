@@ -2,19 +2,20 @@ package org.apache.bookkeeper.bookie;
 
 import org.apache.bookkeeper.bookie.util.TestBKConfiguration;
 import org.apache.bookkeeper.conf.ServerConfiguration;
-import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.net.DNS;
 import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BookieImplAddressBaduaTest {
 
+    /*
+     * Questa classe è stata aggiunta dopo aver analizzato il report di badua, per coprire quei DU che rimanevano scoperti
+     */
     @Test
     public void unresolvedHostNameTest() {
         try (MockedStatic<DNS> mockedStatic = Mockito.mockStatic(DNS.class)) {
@@ -26,10 +27,9 @@ public class BookieImplAddressBaduaTest {
             conf.setBookiePort(0);
 
             boolean exceptionThrown = false;
-            BookieSocketAddress bookieSocketAddress = null;
 
             try {
-                bookieSocketAddress = BookieImpl.getBookieAddress(conf);
+                BookieImpl.getBookieAddress(conf);
             } catch (UnknownHostException e) {
                 exceptionThrown = true;
 
@@ -53,10 +53,9 @@ public class BookieImplAddressBaduaTest {
             conf.setBookiePort(0);
 
             boolean exceptionThrown = false;
-            BookieSocketAddress bookieSocketAddress = null;
 
             try {
-                bookieSocketAddress = BookieImpl.getBookieAddress(conf);
+                BookieImpl.getBookieAddress(conf);
             } catch (UnknownHostException e) {
                 exceptionThrown = true;
 
