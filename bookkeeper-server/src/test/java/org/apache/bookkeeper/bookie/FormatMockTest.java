@@ -5,22 +5,17 @@ import org.apache.bookkeeper.util.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.stubbing.Answer;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 
 import static org.apache.bookkeeper.bookie.FormatTest.*;
 import static org.apache.bookkeeper.bookie.util.TestBookieImplUtil.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-@PrepareForTest({IOUtils.class, BookieImpl.class})
-@RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
+
 public class FormatMockTest {
 
 
@@ -32,48 +27,56 @@ public class FormatMockTest {
 
 
     @Test
-    public void formatTestWithMockTrue() throws Exception {
+    public void formatTestWithMockTrue() {
 
-        PowerMockito.mockStatic(IOUtils.class);
-        PowerMockito.when(IOUtils.confirmPrompt("Are you sure to format Bookie data..?")).thenAnswer((Answer<Boolean>) invocation -> true);
+        try(MockedStatic<IOUtils> mockedStatic = Mockito.mockStatic(IOUtils.class)) {
+            mockedStatic.when(() -> IOUtils.confirmPrompt("Are you sure to format Bookie data..?")).thenReturn(true);
 
-        cleanAll();
-        createDirs();
+            cleanAll();
+            createDirs();
 
-        ServerConfiguration configuration = new ServerConfiguration();
-        configuration.setJournalDirsName(extractFileNames(journalList));
-        configuration.setLedgerDirNames(extractFileNames(ledgerList));
-        configuration.setIndexDirName(extractFileNames(indexList));
-        configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
-        boolean output = BookieImpl.format(configuration, true, false);
-        assertTrue(output);
+            ServerConfiguration configuration = new ServerConfiguration();
+            configuration.setJournalDirsName(extractFileNames(journalList));
+            configuration.setLedgerDirNames(extractFileNames(ledgerList));
+            configuration.setIndexDirName(extractFileNames(indexList));
+            configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
+            boolean output = BookieImpl.format(configuration, true, false);
+            assertTrue(output);
+        }
+
+
+
+
+
+    }
+
+    @Test
+    public void formatTestWithMockFalse() {
+
+        try(MockedStatic<IOUtils> mockedStatic = Mockito.mockStatic(IOUtils.class)) {
+            mockedStatic.when(() -> IOUtils.confirmPrompt("Are you sure to format Bookie data..?")).thenReturn(false);
+
+            cleanAll();
+            createDirs();
+
+            ServerConfiguration configuration = new ServerConfiguration();
+            configuration.setJournalDirsName(extractFileNames(journalList));
+            configuration.setLedgerDirNames(extractFileNames(ledgerList));
+            configuration.setIndexDirName(extractFileNames(indexList));
+            configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
+            boolean output = BookieImpl.format(configuration, true, false);
+            assertFalse(output);
+
+        }
+
+
 
 
 
     }
 
     @Test
-    public void formatTestWithMockFalse() throws Exception {
-
-        PowerMockito.mockStatic(IOUtils.class);
-        PowerMockito.when(IOUtils.confirmPrompt("Are you sure to format Bookie data..?")).thenAnswer((Answer<Boolean>) invocation -> false);
-
-        cleanAll();
-        createDirs();
-
-        ServerConfiguration configuration = new ServerConfiguration();
-        configuration.setJournalDirsName(extractFileNames(journalList));
-        configuration.setLedgerDirNames(extractFileNames(ledgerList));
-        configuration.setIndexDirName(extractFileNames(indexList));
-        configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
-        boolean output = BookieImpl.format(configuration, true, false);
-        assertFalse(output);
-
-
-    }
-
-    @Test
-    public void formatTestWithMockException() throws Exception {
+    public void formatTestWithMockException() {
 
         /*
          In questo test, come si vede dal mock, viene lanciata una IOException (la lanciamo da IOUtils perchè è un oggetto
@@ -83,19 +86,23 @@ public class FormatMockTest {
          Come si vede infatti dalla segnatura di format(), non esegue il throws di nessuna eccezione.
          */
 
-        PowerMockito.mockStatic(IOUtils.class);
-        PowerMockito.when(IOUtils.confirmPrompt("Are you sure to format Bookie data..?")).thenThrow(IOException.class);
+        try(MockedStatic<IOUtils> mockedStatic = Mockito.mockStatic(IOUtils.class)) {
+            mockedStatic.when(() -> IOUtils.confirmPrompt("Are you sure to format Bookie data..?")).thenThrow(IOException.class);
 
-        cleanAll();
-        createDirs();
+            cleanAll();
+            createDirs();
 
-        ServerConfiguration configuration = new ServerConfiguration();
-        configuration.setJournalDirsName(extractFileNames(journalList));
-        configuration.setLedgerDirNames(extractFileNames(ledgerList));
-        configuration.setIndexDirName(extractFileNames(indexList));
-        configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
-        boolean output = BookieImpl.format(configuration, true, false);
-        assertFalse(output);
+            ServerConfiguration configuration = new ServerConfiguration();
+            configuration.setJournalDirsName(extractFileNames(journalList));
+            configuration.setLedgerDirNames(extractFileNames(ledgerList));
+            configuration.setIndexDirName(extractFileNames(indexList));
+            configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
+            boolean output = BookieImpl.format(configuration, true, false);
+            assertFalse(output);
+        }
+
+
+
 
 
 
