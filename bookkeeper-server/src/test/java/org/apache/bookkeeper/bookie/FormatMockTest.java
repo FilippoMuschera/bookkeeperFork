@@ -28,6 +28,7 @@ public class FormatMockTest {
     public void cleanAfter(){
         cleanAll();
         deleteFolder(new File(METADATA_PATH));
+        deleteFolder(new File("./target/tempDirs"));
     }
 
 
@@ -106,11 +107,46 @@ public class FormatMockTest {
             assertFalse(output);
         }
 
+    }
 
+    @Test
+    public void emptyDirTest() throws IOException {
 
+        cleanAll();
+        createDirs();
 
+        ServerConfiguration configuration = new ServerConfiguration();
+        configuration.setLedgerDirNames(extractFileNames(ledgerList));
+        configuration.setIndexDirName(extractFileNames(indexList));
+        configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
 
+        File tempFile = new File("./target/tempDirs/emptyDir");
+        assertTrue(tempFile.mkdirs());
+        configuration.setJournalDirsName(new String[]{tempFile.getAbsolutePath()});
 
+        boolean output = BookieImpl.format(configuration, true, false);
+        assertTrue(output);
+
+    }
+
+    @Test
+    public void notADirTest() throws IOException {
+
+        cleanAll();
+        createDirs();
+
+        ServerConfiguration configuration = new ServerConfiguration();
+        configuration.setLedgerDirNames(extractFileNames(ledgerList));
+        configuration.setIndexDirName(extractFileNames(indexList));
+        configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
+
+        File tempFile = new File("temp.txt");
+        assertTrue(tempFile.createNewFile());
+        configuration.setJournalDirsName(new String[]{tempFile.getAbsolutePath()});
+
+        boolean output = BookieImpl.format(configuration, true, false);
+        assertTrue(output);
+        tempFile.deleteOnExit();
 
     }
 
