@@ -29,6 +29,7 @@ public class JournalTest {
     private final Expected expected;
     private Exception actualException = null;
     private long journalID;
+    private static volatile boolean wasProcessCalled = false;
 
 
     @Parameterized.Parameters
@@ -43,6 +44,7 @@ public class JournalTest {
                 {1,                       1,          new DummyJournalScan(),     Expected.PASSED},
                 {0,                       0,          null,                       Expected.NPE},
                 {0,                       0,          new InvalidJournalScan(),   Expected.IOE},
+                {0,             Integer.MAX_VALUE,    new InvalidJournalScan(),   Expected.NO_READ},
 
         });
     }
@@ -58,11 +60,13 @@ public class JournalTest {
 
     @Before
     public void before() throws Exception {
+        wasProcessCalled = false; //reset
         this.journal = createJournal();
         this.journalID = this.journalToUse == 0 ?  Journal.listJournalIds(this.journal.getJournalDirectory(), null).get(0) : 1;
         //ora writtenBytes ha il numero di byte scritti sul Journal, bisogna aggiungere quelli relativi all'update
         //della versione del journal stesso (che è un int).
         WRITTEN_BYTES += Integer.BYTES;
+
 
 
 
@@ -103,6 +107,8 @@ public class JournalTest {
                 assertEquals(this.actualException.getClass(), NullPointerException.class);
             else if (this.expected == Expected.IOE)
                 assertEquals(this.actualException.getClass(), IOException.class);
+            else if (this.expected == Expected.NO_READ)
+                assertFalse(wasProcessCalled);
         }
 
     }
@@ -115,6 +121,7 @@ public class JournalTest {
         @Override
         public void process(int journalVersion, long offset, ByteBuffer entry) {
             //non fa nulla, metodo dummy
+            wasProcessCalled = true;
 
         }
     }
@@ -136,7 +143,7 @@ public class JournalTest {
     }
 
     private enum Expected {
-        IOE, NPE, EXACT_BYTES, PASSED
+        IOE, NPE, EXACT_BYTES, NO_READ, PASSED
     }
 
 }

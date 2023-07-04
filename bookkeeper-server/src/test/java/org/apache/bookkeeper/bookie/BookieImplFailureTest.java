@@ -142,6 +142,8 @@ public class BookieImplFailureTest {
         //chiaramente trovare un parent alla cartella "notAPath\0";
         bundles.add(InputBundle.getDefault().setIndexDirsManager(INVALID).setExpectedValue(NP_EXCEPTION));
         bundles.add(InputBundle.getDefault().setBookieServiceInfoSupplier(null).setExpectedValue(NP_EXCEPTION));
+        bundles.add(InputBundle.getDefault().setBookiePort(65536).setExpectedValue(IA_EXCEPTION));
+
 
 
 
