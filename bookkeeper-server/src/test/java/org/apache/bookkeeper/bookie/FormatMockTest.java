@@ -110,7 +110,7 @@ public class FormatMockTest {
     }
 
     @Test
-    public void emptyDirTest() throws IOException {
+    public void emptyDirTest() {
 
         cleanAll();
         createDirs();
@@ -141,12 +141,14 @@ public class FormatMockTest {
         configuration.setGcEntryLogMetadataCachePath(METADATA_PATH);
 
         File tempFile = new File("temp.txt");
+        if (tempFile.exists())
+            assertTrue(tempFile.delete());
         assertTrue(tempFile.createNewFile());
         configuration.setJournalDirsName(new String[]{tempFile.getAbsolutePath()});
 
         boolean output = BookieImpl.format(configuration, true, false);
         assertTrue(output);
-        tempFile.deleteOnExit();
+        assertTrue(tempFile.delete());
 
     }
 
