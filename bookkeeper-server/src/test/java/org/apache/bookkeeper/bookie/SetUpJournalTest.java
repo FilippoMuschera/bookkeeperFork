@@ -48,8 +48,15 @@ public class SetUpJournalTest {
     File directory;
 
     public SetUpJournalTest(int index, Type dirType, Type configType, Type ledgDirManType, StatsLogger logger, ByteBufAllocator bba, TestBookieImplUtil.ExpectedValue expected) throws IOException {
+
+        boolean wasConfigNull = false;
+        if (configType == null) {
+            configType = Type.VALID; //Lo setto momentaneamente a valid, la uso per creare il ledgerDirsManager, e poi la setto a null per il test
+            wasConfigNull = true;
+        }
+
         this.index = index;
-        this.directory = getDirType(dirType);
+        this.directory = dirType == null ? null : getDirType(dirType);
         this.config = getConfigType(configType, this.directory);
         this.ledgerDirsManager = getLedgerDirsManagerType(ledgDirManType, this.config);
         this.statsLogger = logger;
@@ -57,6 +64,9 @@ public class SetUpJournalTest {
         this.expectedValue = expected;
         uncaughtExceptionInThread = false;
         threadException = null;
+
+        if (wasConfigNull)
+            this.config = null;
 
 
     }
@@ -77,7 +87,8 @@ public class SetUpJournalTest {
                 {1, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), null, BUFF_EXCEPTION},
                 {1, Type.VALID, Type.VALID, Type.VALID, new NullStatsLogger(), new InvalidBBA(), RUNTIME_BUFF_EXCEPTION},
                 {1, Type.VALID, Type.VALID, null, new NullStatsLogger(), UnpooledByteBufAllocator.DEFAULT, NP_EXCEPTION},
-
+                {1, null, Type.VALID, Type.VALID, new NullStatsLogger(), PooledByteBufAllocator.DEFAULT, NULL_JOURNAL},
+                {1, Type.VALID, null, Type.VALID, new NullStatsLogger(), PooledByteBufAllocator.DEFAULT, NP_EXCEPTION},
 
 
         });
@@ -114,7 +125,7 @@ public class SetUpJournalTest {
     public static ServerConfiguration getConfigType(Type configType, File dir) throws IOException {
 
         if (configType == null) return null;
-        else if (configType == Type.VALID) {
+        else if (configType == Type.VALID && dir != null) {
             ServerConfiguration conf = new ServerConfiguration();
             conf.setJournalDirsName(new String[]{dir.getPath()})
                     .setMetadataServiceUri(null)
@@ -130,6 +141,17 @@ public class SetUpJournalTest {
             return conf;
         } else if (configType == Type.INVALID) {
             return new InvalidServerConfig();
+        } else if (configType == Type.VALID && dir == null) {
+            ServerConfiguration conf = new ServerConfiguration();
+            conf.setJournalDirsName(null)
+                    .setMetadataServiceUri(null)
+                    .setJournalAdaptiveGroupWrites(false)
+                    .setMaxBackupJournals(0)
+                    .setBookiePort(1);
+            File directory = temporaryFolder.newFolder();
+            BookieImpl.checkDirectoryStructure(BookieImpl.getCurrentDirectory(directory));
+            conf.setLedgerDirNames(directory.list());
+            return conf;
         }
 
         fail(); //non dovrei mai arrivare qui
@@ -256,7 +278,17 @@ public class SetUpJournalTest {
             assertNull(exceptionRaised);
             assertEquals(this.directory, journal.getJournalDirectory());
             assertTrue(journal.running);
-            assertTrue(journal.journalDirectory.canRead() && journal.journalDirectory.canWrite() && journal.journalDirectory.exists());
+
+            try {
+                assertTrue(journal.journalDirectory.canRead() && journal.journalDirectory.canWrite() && journal.journalDirectory.exists());
+                assertNotEquals(NULL_JOURNAL, this.expectedValue); //NULL_JOURNAL *deve* entrare nel catch per forza, altrimenti facciamo fallire il test
+            } catch (NullPointerException npe) {
+                assertEquals(NULL_JOURNAL, this.expectedValue);
+               // return;
+            } catch (Exception e) {
+                fail("No other exception should be thrown");
+            }
+
             //Il Journal prende in input la dimensione in MB, ma la conserva in Bytes. Piccolo controllo sulla conversione.
             assertEquals(config.getMaxJournalSizeMB() * 1024 * 1024, journal.maxJournalSize);
             assertTrue(journal.getJournalStats().getJournalMemoryMaxStats().getDefaultValue() >= journal.getMemoryUsage());
@@ -282,7 +314,14 @@ public class SetUpJournalTest {
                 //Usiamo il latch con un tempo limite in modo da uccidere le mutazioni di PIT che altrimenti verrebbero solamente segnate
                 //con TIMED_OUT, poichè chiaramente, se la mutazione interessa la addEntry, il latch.countDown() non viene mai
                 //eseguito, il test rimane bloccato a questa riga.
-                assertTrue(latch.await(20, TimeUnit.SECONDS));
+                boolean lathOutput = latch.await(3, TimeUnit.SECONDS);
+                if (this.expectedValue != NULL_JOURNAL)
+                    assertTrue(lathOutput);
+                else {
+                    //Qui il NULL_JOURNAL sarebbe entrato in loop/attesa infinita
+                    assertFalse(lathOutput);
+                    return;
+                }
 
                 //ora lanciamo la scan journal per controllare che non trovi record corrotti, per verificare che l'esecuzione sia andata
                 //a buon fine
